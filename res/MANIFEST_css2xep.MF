@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+Main-Class: be.re.css.CSSToXEP
+Implementation-Title: CSSToXEP
+Implementation-Version: 1.6.2
+Implementation-Vendor: Pincette bvba
+Class-Path: saxon8.jar xep.jar
+

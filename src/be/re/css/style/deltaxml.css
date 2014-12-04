@@ -1,0 +1,40 @@
+@namespace deltaxml url(http://www.deltaxml.com/ns/well-formed-delta-v1);
+
+@media print
+{
+  deltaxml|PCDATAnew, deltaxml|PCDATAold
+  {
+    display: inline;
+  }
+
+  deltaxml|exchange, deltaxml|new, deltaxml|old
+  {
+    display: wrapper;
+  }
+
+  *[deltaxml|delta="add"], deltaxml|PCDATAnew, deltaxml|new
+  {
+    text-decoration: underline;
+  }
+
+  *[deltaxml|delta="delete"], deltaxml|PCDATAold, deltaxml|old
+  {
+    text-decoration: line-through;
+  }
+
+  *[deltaxml|delta="add"]:before, deltaxml|PCDATAnew:before,
+    deltaxml|new, *[deltaxml|delta="delete"]:before,
+    deltaxml|PCDATAold:before, deltaxml|old
+  {
+    change-bar-class: changed;
+    change-bar-placement: alternate;
+    change-bar-style: solid;
+    change-bar-width: 0.2pt;
+  }
+
+  *[deltaxml|delta="add"]:after, deltaxml|PCDATAnew:after,
+    *[deltaxml|delta="delete"]:after, deltaxml|PCDATAold:after
+  {
+    change-bar-class: changed;
+  }
+}

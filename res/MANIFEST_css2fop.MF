@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+Main-Class: be.re.css.CSSToFOP
+Implementation-Title: CSSToFOP
+Implementation-Version: 1.6.2
+Implementation-Vendor: Pincette bvba
+Class-Path: fop.jar

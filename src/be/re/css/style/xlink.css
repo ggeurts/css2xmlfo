@@ -1,0 +1,9 @@
+@namespace xlink url(http://www.w3.org/1999/xlink);
+
+@media print
+{
+  *[xlink|href]
+  {
+    link: attr(xlink|href);
+  }
+}

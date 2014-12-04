@@ -1,0 +1,211 @@
+@import "xhtml.css";
+@namespace url(http://www.w3.org/1999/xhtml);
+
+@media print
+{
+  a[href]
+  {
+    color: blue;
+    link: attr(href);
+    text-decoration: none;
+  }
+
+  a[name]
+  {
+    anchor: name;
+  }
+
+  blockquote, dl, ol, p, ul
+  {
+    margin: 0.83em 0pt;
+  }
+
+  blockquote
+  {
+    margin-left: 3em;
+    margin-right: 3em;
+  }
+
+  body
+  {
+    font-family: serif;
+    padding: 0pt;
+    region: body;
+  }
+
+  body:lang(da)
+  {
+    quotes: "\00BB" "\00AB";
+  }
+
+  body:lang(de-DE), body:lang(de-AT)
+  {
+    quotes: "\201E" "\201C" "\201A" "\2018"
+  }
+
+  body, body:lang(en), body:lang(es)
+  {
+    quotes: "\201C" "\201D" "\2018" "\2019";
+  }
+
+  body:lang(fr)
+  {
+    quotes: "\00AB " " \00BB" "\2039 " " \203A";
+  }
+
+  body:lang(it)
+  {
+    quotes: "\00AB " " \00BB";
+  }
+
+  body:lang(nl)
+  {
+    quotes: "\201D" "\201D" "\2019" "\2019";
+  }
+
+  body:lang(no), bodylang:(pt), body:lang(de-CH)
+  {
+    quotes: "\00AB" "\00BB" "\2039" "\203A"
+  }
+
+  body:lang(sv)
+  {
+    quotes: "\00BB" "\00BB";
+  }
+
+  caption
+  {
+    margin: 0.5em 0pt;
+  }
+
+  dt
+  {
+    page-break-after: avoid;
+  }
+
+  h1
+  {
+    font-size: 1.6em;
+    margin-bottom: 0.7em;
+    margin-top: 1.4em;
+  }
+
+  h2
+  {
+    font-size: 1.3em;
+    margin-bottom: 0.6em;
+    margin-top: 1.2em;
+  }
+
+  h3
+  {
+    font-size: 1.1em;
+  }
+
+  h3, h4
+  {
+    margin-bottom: 0.5em;
+    margin-top: 1em;
+  }
+
+  h1, h2, h3, h4, h5, h6
+  {
+    hyphenate: false;
+  }
+
+  hr
+  {
+    border: 0.1pt solid;
+  }
+
+  img
+  {
+    content-height: scale-to-fit;
+    content-width: scale-to-fit;
+    display: graphic;
+    scaling: uniform;
+    src: attr(src);
+  }
+
+  li
+  {
+    margin-bottom: 0.8em;
+    margin-top: 0.8em;
+  }
+
+  li p, li blockquote, li dl, li ol, li ul
+  {
+    margin-bottom: 0.5em;
+    margin-top: 0.5em;
+  }
+
+  li li
+  {
+    margin-bottom: 0.5em;
+    margin-top: 0.5em;
+  }
+
+  li li p, li li blockquote, li li dl, li li ol, li li ul
+  {
+    margin-bottom: 0.3em;
+    margin-top: 0.3em;
+  }
+
+  li li li
+  {
+    margin-bottom: 0.4em;
+    margin-top: 0.4em;
+  }
+
+  li li li p, li li li blockquote, li li li dl, li li li ol,
+    li li li ul
+  {
+    margin-bottom: 0.3em;
+    margin-top: 0.3em;
+  }
+
+  li, p
+  {
+    text-align: justify;
+  }
+
+  pre
+  {
+    font-size: 0.85em;
+  }
+
+  ul
+  {
+    list-style-type: disc;
+  }
+
+  ol li ul, ul li ul
+  {
+    list-style-type: circle;
+  }
+
+  ol li ol li ul, ol li ul li ul, ul li ol li ul, ul li ul li ul
+  {
+    list-style-type: square;
+  }
+
+  q:after
+  {
+    content: close-quote;
+  }
+
+  q:before
+  {
+    content: open-quote;
+  }
+
+  script
+  {
+    display: none;
+  }
+
+  span.section-number
+  {
+    padding-right: 1em;
+  }
+}

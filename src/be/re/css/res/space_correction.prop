@@ -1,0 +1,12 @@
+#Should only have entries for U+2000 through U+200A. The rest is ignored.
+2000=0.5em
+2001=1em
+2002=0.5em
+2003=1em
+2004=0.33em
+2005=0.25em
+2006=0.16em
+2007=
+2008=
+2009=0.2em
+200A=0.1em

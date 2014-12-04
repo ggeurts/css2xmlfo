@@ -1,0 +1,253 @@
+@page
+{
+  margin-bottom: 25mm;
+  margin-top: 25mm;
+}
+
+/* A page for the back matter. */
+@page back
+{
+  force-page-count: even;
+}
+
+/* A page for the back of the title page with copy right notice. */
+@page copy-right
+{
+  margin-top: 35mm;
+}
+
+/* A page for the front matter. */
+@page front
+{
+  force-page-count: even;
+  counter-reset: page 1;
+}
+
+/* A page for the main matter. */
+@page main
+{
+  force-page-count: even;
+}
+
+/* A main page to reset the page number. */
+@page main-first
+{
+  counter-reset: page 1;
+  force-page-count: even;
+}
+
+/* A page to force page switches without generating content. */
+@page separator
+{
+  margin-top: 35mm;
+}
+
+/* The title page. */
+@page title
+{
+  margin-left: 25mm;
+  margin-right: 25mm;
+  margin-top: 50mm;
+}
+
+@page :left
+{
+  margin-left: 40mm;
+  margin-right: 40mm;
+}
+
+@page :right
+{
+  margin-left: 40mm;
+  margin-right: 40mm;
+}
+
+@media print
+{
+  a
+  {
+    color: black;
+  }
+
+  acronym
+  {
+    font-family: serif-small-caps;
+    text-transform: lowercase;
+  }   
+
+  body
+  { 
+    font-family: serif;
+    font-size: 11pt;
+    hyphenate: true;
+    line-height: 1.2;
+  } 
+
+  dd
+  {
+    text-align: justify;
+  } 
+
+  div.page-reset
+  {
+    page: page-reset;
+  }
+
+  div.separator
+  {
+    page: separator;
+  }
+
+  dl, pre, table
+  {
+    margin-bottom: 1.2em;
+    margin-top: 1.2em;
+  }
+
+  table table
+  {
+    margin-bottom: 0pt;
+    margin-top: 0pt;
+  }
+
+  h1, h2, h3, h4, h5, h6
+  {
+    font-weight: normal;
+  }
+
+  h1
+  {
+    font-size: 1.6em;
+    margin-bottom: 2.88em;
+    margin-top: 0pt;
+    page-break-before: right;
+    string-set: chapter contents;
+  }
+
+  h1, h2
+  {
+    font-family: serif-small-caps;
+    letter-spacing: 0.1em;
+    text-transform: lowercase;
+  }
+
+  h2
+  {
+    font-size: 1.2em;
+    margin-bottom: 1.08em;
+    margin-top: 1.08em;
+  }
+
+  h3, h4, h5, h6
+  {
+    font-family: serif-title;
+  }
+
+  h3
+  {
+    font-style: italic;
+  }
+
+  h3, h4, h5, h6
+  {
+    font-size: 1em;
+    margin-bottom: 1.2em;
+    margin-top: 1.2em;
+  }
+
+  p
+  {
+    margin-bottom: 0pt;
+    margin-top: 0pt;
+  }
+
+  p + p
+  {
+    text-indent: 1.5em;
+  }
+
+  pre
+  {
+    page-break-inside: auto;
+  }
+
+  span.footnote-body
+  { 
+    display: footnote-body;
+    font-size: 0.83em;
+  }
+  
+  span.footnote-body:before
+  { 
+    content: counter(footnote);
+    padding-right: 1em;
+  }
+
+  span.footnote-reference
+  {
+    display: footnote-reference;
+  }
+
+  span.footnote-reference:before
+  {
+    counter-increment: footnote;
+    content: counter(footnote);
+    font-size: 0.83em;
+    vertical-align: super;
+  } 
+
+  span.leader
+  {
+    display: leader;
+  }
+
+  span.page-ref > span:before
+  {
+    content: page-ref(attr(class));
+  }
+
+  span.title
+  {
+    font-family: serif-title;
+  }
+
+  sub
+  {
+    font-size: 0.72em;
+    vertical-align: -25%;
+  }
+
+  sup
+  {
+    font-size: 0.72em;
+    vertical-align: 25%;
+  }
+
+  div.toc > h1
+  {
+    string-set: chapter "Table Of Contents";
+    text-align-last: left;
+  }
+
+  div.toc > h1:before
+  {
+    content: "Table Of Contents";
+  }
+
+  div.toc-h1, div.toc-h2, div.toc-h3
+  {
+    text-align: left;
+  }
+
+  div.toc-h1
+  {
+    margin-bottom: 2em;
+    margin-top: 2em;
+  }
+
+  div.toc-h2
+  {
+    margin-bottom: 1em;
+    margin-top: 1em;
+  }
+}

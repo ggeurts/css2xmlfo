@@ -1,0 +1,9 @@
+PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+       "xhtml1/xhtml1-strict.dtd"
+SYSTEM "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"
+       "xhtml1/xhtml1-strict.dtd"
+
+PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+       "xhtml1/xhtml1-transitional.dtd"
+SYSTEM "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"
+       "xhtml1/xhtml1-transitional.dtd"

@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+Main-Class: be.re.css.CSSToXSLFO
+Implementation-Title: CSSToXSLFO
+Implementation-Version: 1.6.2
+Implementation-Vendor: Pincette bvba
