@@ -63,7 +63,7 @@
     quotes: "\201D" "\201D" "\2019" "\2019";
   }
 
-  body:lang(no), bodylang:(pt), body:lang(de-CH)
+  body:lang(no), body:lang(pt), body:lang(de-CH)
   {
     quotes: "\00AB" "\00BB" "\2039" "\203A"
   }
