@@ -398,7 +398,7 @@ public class Util
           (
             file.getAbsolutePath().replace(File.separatorChar, '/')
           )
-        ).toURL();
+        ).toURI().toURL();
     }
 
     catch (MalformedURLException e)

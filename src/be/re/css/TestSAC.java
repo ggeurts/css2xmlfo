@@ -87,7 +87,7 @@ public class TestSAC
     Parser	parser = new ParserFactory().makeParser();
     PrintWriter	out = new PrintWriter(System.out);
 
-    parser.setDocumentHandler(new SACWriter(out, new File(args[0]).toURL()));
+    parser.setDocumentHandler(new SACWriter(out, new File(args[0]).toURI().toURL()));
 
     parser.parseStyleSheet
     (

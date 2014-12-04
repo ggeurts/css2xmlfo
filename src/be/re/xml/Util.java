@@ -25,10 +25,10 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.ProcessingInstruction;
 import org.w3c.dom.Text;
-import org.xml.sax.AttributeList;
-import org.xml.sax.DocumentHandler;
+import org.xml.sax.Attributes;
+import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
-import org.xml.sax.helpers.AttributeListImpl;
+import org.xml.sax.helpers.AttributesImpl;
 
 
 
@@ -239,18 +239,17 @@ public class Util
    * Extracts the attributes of an element for use in a SAX-environment.
    */
 
-  public static AttributeList
+  public static Attributes
   createAttributeList(Element element)
   {
-    AttributeListImpl	attributes = new AttributeListImpl();
+    AttributesImpl	attributes = new AttributesImpl();
     NamedNodeMap	map = element.getAttributes();
 
     for (int i = 0; i < map.getLength(); ++i)
     {
       Attr	attribute = (Attr) map.item(i);
 
-      attributes.
-        addAttribute(attribute.getName(), "CDATA", attribute.getValue());
+      attributes.addAttribute(attribute.getNamespaceURI(), attribute.getLocalName(), attribute.getName(), "CDATA", attribute.getValue());
     }
 
     return attributes;
@@ -263,18 +262,18 @@ public class Util
    */
 
   public static void
-  elementToDocumentHandler(Element element, DocumentHandler handler)
+  elementToDocumentHandler(Element element, ContentHandler handler)
     throws SAXException
   {
-    handler.startElement(element.getTagName(), createAttributeList(element));
+    handler.startElement(element.getNamespaceURI(), element.getLocalName(), element.getTagName(), createAttributeList(element));
     elementToDocumentHandlerChild(element.getFirstChild(), handler);
-    handler.endElement(element.getTagName());
+    handler.endElement(element.getNamespaceURI(), element.getLocalName(), element.getTagName());
   }
 
 
 
   private static void
-  elementToDocumentHandlerChild(Node node, DocumentHandler handler)
+  elementToDocumentHandlerChild(Node node, ContentHandler handler)
     throws SAXException
   {
     if (node == null)
@@ -716,7 +715,7 @@ public class Util
   processingInstructionToDocumentHandler
   (
     ProcessingInstruction	processingInstruction,
-    DocumentHandler		handler
+    ContentHandler		handler
   ) throws SAXException
   {
     handler.processingInstruction
@@ -1264,7 +1263,7 @@ public class Util
    */
 
   public static void
-  textToDocumentHandler(Text text, DocumentHandler handler) throws SAXException
+  textToDocumentHandler(Text text, ContentHandler handler) throws SAXException
   {
     String	data = text.getData();
     char[]	chars = new char[data.length()];
