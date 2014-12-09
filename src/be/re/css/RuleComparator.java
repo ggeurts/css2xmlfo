@@ -8,13 +8,10 @@ import java.util.Comparator;
  *
  * @author Werner Donn\u00e9
  */
-class RuleComparator implements Comparator
+class RuleComparator implements Comparator<Rule>
 {
-
-    public int compare(Object object1, Object object2)
+    public int compare(Rule rule1, Rule rule2)
     {
-        Rule rule1 = (Rule) object1;
-        Rule rule2 = (Rule) object2;
         Property property1 = rule1.getProperty();
         Property property2 = rule2.getProperty();
         int result = property1.getName().compareTo(property2.getName());

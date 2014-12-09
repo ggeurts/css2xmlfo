@@ -71,14 +71,7 @@ public class Property
         this.prefixMap = prefixMap;
     }
 
-    public
-            Property(
-                    String name,
-                    LexicalUnit value,
-                    boolean important,
-                    Map prefixMap,
-                    URL baseUrl
-            )
+    public Property(String name, LexicalUnit value, boolean important, Map prefixMap, URL baseUrl)
     {
         this.name = name;
         this.value = value;
@@ -160,34 +153,40 @@ public class Property
 
     public Property[] split()
     {
-        StringTokenizer tokenizer = new StringTokenizer(getName(), "-");
-        String name = "split";
-
-        while (tokenizer.hasMoreTokens())
+        switch (name)
         {
-            String token = tokenizer.nextToken();
-
-            name += token.substring(0, 1).toUpperCase() + token.substring(1);
-        }
-
-        try
-        {
-            return (Property[]) getClass().getDeclaredMethod(name, new Class[0]).invoke(this, new Object[0]);
-        } 
-        catch (IllegalAccessException e)
-        {
-            throw new UndeclaredThrowableException(e);
-        } 
-        catch (InvocationTargetException e)
-        {
-            throw new UndeclaredThrowableException(e);
-        } 
-        catch (NoSuchMethodException e)
-        {
-            return new Property[]
-            {
-                this
-            };
+            case "background":
+                return splitBackground();
+            case "border":
+                return splitBorder();
+            case "border-bottom":
+                return splitBorderBottom();
+            case "border-bottom-width":
+                return splitBorderBottomWidth();
+            case "border-color":
+                return splitBorderColor();
+            case "border-left":
+                return splitBorderLeft();
+            case "border-right":
+                return splitBorderRight();
+            case "border-style":
+                return splitBorderStyle();
+            case "border-top":
+                return splitBorderTop();
+            case "border-top-width":
+                return splitBorderTopWidth();
+            case "border-width":
+                return splitBorderWidth();
+            case "font":
+                return splitFont();
+            case "list-style":
+                return splitListStyle();
+            case "margin":
+                return splitMargin();
+            case "padding":
+                return splitPadding();
+            default:
+                return new Property[] { this };
         }
     }
 
@@ -553,5 +552,4 @@ public class Property
     {
         return splitFourWays(getName(), getImportant());
     }
-
 } // Property

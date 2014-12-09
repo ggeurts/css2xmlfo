@@ -3,205 +3,160 @@ package be.re.util;
 import java.util.HashSet;
 import java.util.Set;
 
-
-
-public class DigitalTree implements Cloneable
-
+public class DigitalTree<E> implements Cloneable
 {
+    private static final int BITS = 8;
+    private static final int MASK = (0x1 << BITS) - 1;
+    private static final int SIZE = (0x1 << BITS);
 
-  private static final int	BITS = 8;
-  private static final int	MASK = (0x1 << BITS) - 1;
-  private static final int	SIZE = (0x1 << BITS);
+    private Set<String> keys;
+    private Node[] root = new Node[SIZE];
 
-  private Set		keys;
-  private Node[]	root = new Node[SIZE];
-
-
-
-  public
-  DigitalTree()
-  {
-    this(false);
-  }
-
-
-
-  public
-  DigitalTree(boolean saveKeys)
-  {
-    keys = saveKeys ? new HashSet() : null;
-  }
-
-
-
-  /**
-   * Returns a shallow copy.
-   */
-
-  public Object
-  clone()
-  {
-    DigitalTree	copy = null;
-
-    try
+    public DigitalTree()
     {
-      copy = (DigitalTree) super.clone();
+        this(false);
     }
 
-    catch (CloneNotSupportedException e)
+    public DigitalTree(boolean saveKeys)
     {
-      return null;
+        keys = saveKeys ? new HashSet<>() : null;
     }
 
-    copy.root = cloneNodes(root);
-
-    if (keys != null)
+    /**
+     * Returns a shallow copy.
+     */
+    public Object clone() 
     {
-      copy.keys = (Set) ((HashSet) keys).clone();
-    }
-
-    return copy;
-  }
-
-
-
-  private static Node[]
-  cloneNodes(Node[] nodes)
-  {
-    Node[]	result = new Node[nodes.length];
-
-    for (int i = 0; i < nodes.length; ++i)
-    {
-      if (nodes[i] != null)
-      {
-        result[i] = (Node) nodes[i].clone();
-      }
-    }
-
-    return result;
-  }
-
-
-
-  public Object
-  get(String key)
-  {
-    Node[]	current = root;
-    int		i = 0;
-    int		length = key.length();
-    Node	node = null;
-
-    for (i = 0; i < length && current != null; ++i)
-    {
-      char	c = key.charAt(i);
-
-      for (int j = 0; j < 16 / BITS && current != null; ++j)
-      {
-        node = current[((MASK << (j * BITS)) & c) >>> (j * BITS)];
-        current = node != null ? node.nodes : null;
-      }
-    }
-
-    return i == length && node != null ? node.object : null;
-  }
-
-
-
-  public Set
-  keySet()
-  {
-    return keys;
-  }
-
-
-
-  public void
-  put(String key, Object o)
-  {
-    Node[]	current = root;
-    int		length = key.length();
-    Node	node = null;
-
-    for (int i = 0; i < length; ++i)
-    {
-      char	c = key.charAt(i);
-
-      for (int j = 0; j < 16 / BITS; ++j)
-      {
-        int	value = ((MASK << (j * BITS)) & c) >>> (j * BITS);
-
-        if (current[value] == null)
+        DigitalTree<E> copy;
+        try
         {
-          current[value] = new Node();
+            copy = (DigitalTree<E>) super.clone();
+        } 
+        catch (CloneNotSupportedException e)
+        {
+            return null;
         }
 
-        if
-        (
-          current[value].nodes == null	&&
-          (
-            i < length - 1		||
-            j < (16 / BITS) - 1
-          )
-        )
+        copy.root = cloneNodes(root);
+        if (keys != null)
         {
-          current[value].nodes = new Node[SIZE];
+            copy.keys = (Set<String>)((HashSet<String>)keys).clone();
         }
 
-        node = current[value];
-        current = current[value].nodes;
-      }
+        return copy;
     }
 
-    node.object = o;
-
-    if (keys != null)
+    private static Node[] cloneNodes(Node[] nodes)
     {
-      keys.add(key);
+        Node[] result = new Node[nodes.length];
+
+        for (int i = 0; i < nodes.length; ++i)
+        {
+            if (nodes[i] != null)
+            {
+                result[i] = (Node) nodes[i].clone();
+            }
+        }
+
+        return result;
     }
-  }
 
-
-
-  public void
-  remove(String key)
-  {
-    put(key, null);
-  }
-
-
-
-  private static class Node implements Cloneable
-
-  {
-
-    private Node[]	nodes;
-    private Object	object;
-
-
-
-    protected Object
-    clone()
+    public E get(String key)
     {
-      Node	copy = null;
+        Node[] current = root;
+        int i = 0;
+        int length = key.length();
+        Node node = null;
 
-      try
-      {
-        copy = (Node) super.clone();
-      }
+        for (i = 0; i < length && current != null; ++i)
+        {
+            char c = key.charAt(i);
 
-      catch (CloneNotSupportedException e)
-      {
-        return null;
-      }
+            for (int j = 0; j < 16 / BITS && current != null; ++j)
+            {
+                node = current[((MASK << (j * BITS)) & c) >>> (j * BITS)];
+                current = node != null ? node.nodes : null;
+            }
+        }
 
-      if (nodes != null)
-      {
-        copy.nodes = cloneNodes(nodes);
-      }
-
-      return copy;
+        return i == length && node != null 
+                ? (E)node.object 
+                : null;
     }
 
-  } // Node
+    public Set<String> keySet()
+    {
+        return keys;
+    }
 
+    public void put(String key, E element)
+    {
+        Node[] current = root;
+        int length = key.length();
+        Node node = null;
+
+        for (int i = 0; i < length; ++i)
+        {
+            char c = key.charAt(i);
+
+            for (int j = 0; j < 16 / BITS; ++j)
+            {
+                int value = ((MASK << (j * BITS)) & c) >>> (j * BITS);
+
+                if (current[value] == null)
+                {
+                    current[value] = new Node();
+                }
+
+                if (current[value].nodes == null
+                        && (i < length - 1
+                        || j < (16 / BITS) - 1))
+                {
+                    current[value].nodes = new Node[SIZE];
+                }
+
+                node = current[value];
+                current = current[value].nodes;
+            }
+        }
+
+        node.object = element;
+
+        if (keys != null)
+        {
+            keys.add(key);
+        }
+    }
+
+    public void remove(String key)
+    {
+        put(key, null);
+    }
+
+    private static class Node implements Cloneable
+    {
+        private Node[] nodes;
+        private Object object;
+
+        protected Object clone()
+        {
+            Node copy;
+            try
+            {
+                copy = (Node) super.clone();
+            } 
+            catch (CloneNotSupportedException e)
+            {
+                return null;
+            }
+
+            if (nodes != null)
+            {
+                copy.nodes = cloneNodes(nodes);
+            }
+
+            return copy;
+        }
+
+    } // Node
 } // DigitalTree

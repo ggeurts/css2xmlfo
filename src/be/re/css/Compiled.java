@@ -3,7 +3,6 @@ package be.re.css;
 import be.re.util.DigitalTree;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -24,13 +23,11 @@ import org.w3c.css.sac.SiblingSelector;
  *
  * @author Werner Donn\u00e9
  */
-public class Compiled
+public class Compiled implements Cloneable
 {
-
     static final String ANY_ELEMENT = "*|*".intern();
     private static final int END_STATE = 1;
     private static final String EPSILON = "EPSILON".intern();
-    private static final int ERROR_STATE = -1;
     static final String SIBLING = "SIBLING".intern();
     private static final int START_STATE = 0;
 
@@ -40,6 +37,24 @@ public class Compiled
     DFAState startState = null;
     private static final boolean trace = System.getProperty("be.re.css.trace") != null;
 
+    /**
+     * Creates empty compiled CSS rule collection.
+     */
+    public Compiled()
+    {
+    }
+
+    /**
+     * Creates copy of compiled CSS rule collection.
+     * @param other
+     */
+    public Compiled(Compiled other)
+    {
+        NFAStateCopier copier = new NFAStateCopier();
+        nfa = new NFAState[] { copier.copy(other.nfa[0]), copier.copy(other.nfa[1]) };
+        nfaStateCounter = other.nfaStateCounter;
+    }
+    
     /**
      * Adds the rule to the NFA being built using the Thompson construction. The
      * rule should be split, i.e. it should have exactly one property.
@@ -67,10 +82,8 @@ public class Compiled
 
         for (Iterator i = set.iterator(); i.hasNext();)
         {
-            for (Iterator j = ((NFAState) i.next()).next.iterator(); j.hasNext();)
+            for (Next next : ((NFAState) i.next()).next)
             {
-                Next next = (Next) j.next();
-
                 if (next.event != EPSILON)
                 {
                     SortedSet nextSet = (SortedSet) result.get(next.event);
@@ -118,7 +131,6 @@ public class Compiled
         NFAState[] first = constructNFA(selector.getSimpleSelector());
         NFAState end = new NFAState();
 
-        first[END_STATE].condition = selector.getCondition();
         first[END_STATE].next.add(new Next(selector.getCondition(), end));
 
         return new NFAState[] { first[START_STATE], end };
@@ -215,16 +227,16 @@ public class Compiled
             out.println();
             out.println("DFA START");
             out.println();
-            dumpDFA(startState, new HashSet(), out);
+            dumpDFA(startState, new HashSet<>(), out);
             out.println("DFA END");
             out.println();
             out.flush();
         }
     }
 
-    private static void dumpDFA(DFAState state, Set seen, PrintWriter out)
+    private static void dumpDFA(DFAState state, Set<Integer> seen, PrintWriter out)
     {
-        if (seen.contains(new Integer(state.state)))
+        if (seen.contains(state.state))
         {
             return;
         }
@@ -233,19 +245,16 @@ public class Compiled
 
         List values = new ArrayList();
 
-        for (Iterator i = state.events.keySet().iterator(); i.hasNext();)
+        for (String event : state.events.keySet())
         {
-            String event = (String) i.next();
             DFAState nextState = (DFAState) state.events.get(event);
 
             out.println("  " + event + " -> " + String.valueOf(nextState.state));
             values.add(nextState);
         }
 
-        for (Iterator i = state.candidateConditions.keySet().iterator();
-                i.hasNext();)
+        for (Condition event : state.candidateConditions.keySet())
         {
-            Condition event = (Condition) i.next();
             DFAState nextState = (DFAState) state.candidateConditions.get(event);
 
             out.println(
@@ -259,7 +268,7 @@ public class Compiled
         dumpRules(state.rules, out);
         dumpRules(state.pseudoRules, out);
         out.println();
-        seen.add(new Integer(state.state));
+        seen.add(state.state);
 
         for (Iterator i = values.iterator(); i.hasNext();)
         {
@@ -274,26 +283,24 @@ public class Compiled
             out.println();
             out.println("NFA START");
             out.println();
-            dumpNFA(nfa[START_STATE], new HashSet(), out);
+            dumpNFA(nfa[START_STATE], new HashSet<>(), out);
             out.println("NFA END");
             out.println();
             out.flush();
         }
     }
 
-    private static void dumpNFA(NFAState state, Set seen, PrintWriter out)
+    private static void dumpNFA(NFAState state, Set<Integer> seen, PrintWriter out)
     {
-        if (seen.contains(new Integer(state.state)))
+        if (seen.contains(state.state))
         {
             return;
         }
 
         out.println(String.valueOf(state.state) + ":");
 
-        for (Iterator i = state.next.iterator(); i.hasNext();)
+        for (Next next : state.next)
         {
-            Next next = (Next) i.next();
-
             out.println(
                     "  "
                     + (next.event instanceof Condition
@@ -304,35 +311,31 @@ public class Compiled
         dumpRules(state.rules, out);
         dumpRules(state.pseudoRules, out);
         out.println();
-        seen.add(new Integer(state.state));
+        seen.add(state.state);
 
-        for (Iterator i = state.next.iterator(); i.hasNext();)
+        for (Next next : state.next)
         {
-            dumpNFA(((Next) i.next()).state, seen, out);
+            dumpNFA(next.state, seen, out);
         }
     }
 
-    private static void dumpRules(List rules, PrintWriter out)
+    private static void dumpRules(List<Rule> rules, PrintWriter out)
     {
-        for (Iterator i = rules.iterator(); i.hasNext();)
+        for (Rule rule : rules)
         {
-            Rule rule = (Rule) i.next();
-
             out.println(
                     "  " + (rule.getElementName() != null ? rule.getElementName() : "")
-                    + (rule.getPseudoElementName() != null
-                            ? rule.getPseudoElementName() : "") + ": " + rule.getProperty().getName() + ": "
-                    + rule.getProperty().getValue()
+                            + (rule.getPseudoElementName() != null
+                                    ? rule.getPseudoElementName() : "") + ": " + rule.getProperty().getName() + ": "
+                            + rule.getProperty().getValue()
             );
         }
     }
 
-    private static void epsilonMove(Set set, NFAState state)
+    private static void epsilonMove(Set<NFAState> set, NFAState state)
     {
-        for (Iterator i = state.next.iterator(); i.hasNext();)
+        for (Next next : state.next)
         {
-            Next next = (Next) i.next();
-
             if (next.event == EPSILON && set.add(next.state))
             {
                 epsilonMove(set, next.state);
@@ -352,18 +355,9 @@ public class Compiled
      */
     private DFAState generateDFA(NFAState[] nfa)
     {
-        SortedSet set = new TreeSet // Sorting of the NFA states makes the labels unique.
-                (
-                        new Comparator()
-                        {
-                            public int
-                            compare(Object o1, Object o2)
-                            {
-                                return ((NFAState) o1).state - ((NFAState) o2).state;
-                            }
-                        }
-                );
-        Map states = new HashMap();
+        // Sorting of the NFA states makes the labels unique.
+        SortedSet<NFAState> set = new TreeSet<>((NFAState o1, NFAState o2) -> o1.state - o2.state);
+        Map<String, DFAState> states = new HashMap<>();
 
         set.add(nfa[START_STATE]);
         epsilonMove(set, nfa[START_STATE]);
@@ -376,20 +370,19 @@ public class Compiled
         return result;
     }
 
-    private void generateTransitions(DFAState from, SortedSet set, Map states)
+    private void generateTransitions(DFAState from, SortedSet<NFAState> set, Map<String, DFAState> states)
     {
-        Map nextSets = collectNextSets(set);
+        Map<Object, SortedSet<NFAState>> nextSets = collectNextSets(set);
 
-        for (Iterator i = nextSets.keySet().iterator(); i.hasNext();)
+        for (Object event : nextSets.keySet())
         {
-            Object event = i.next();
-            SortedSet nextSet = (SortedSet) nextSets.get(event);
+            SortedSet<NFAState> nextSet = nextSets.get(event);
 
             if (nextSet.size() > 0)
             {
                 DFAState nextState;
                 String s = label(nextSet);
-                DFAState state = (DFAState) states.get(s);
+                DFAState state = states.get(s);
 
                 if (state == null)
                 {
@@ -403,17 +396,15 @@ public class Compiled
 
                 if (event instanceof Condition)
                 {
-                    from.candidateConditions.put(event, nextState);
+                    from.candidateConditions.put((Condition)event, nextState);
                 }
                 else
                 {
                     from.events.put((String) event, nextState);
                 }
 
-                for (Iterator j = nextSet.iterator(); j.hasNext();)
+                for (NFAState next : nextSet)
                 {
-                    NFAState next = (NFAState) j.next();
-
                     nextState.rules.addAll(next.rules);
                     nextState.pseudoRules.addAll(next.pseudoRules);
                 }
@@ -426,13 +417,13 @@ public class Compiled
         }
     }
 
-    private static String label(SortedSet set)
+    private static String label(SortedSet<NFAState> set)
     {
         String result = "";
 
-        for (Iterator i = set.iterator(); i.hasNext();)
+        for (NFAState i : set)
         {
-            result += "#" + String.valueOf(((NFAState) i.next()).state);
+            result += "#" + String.valueOf(i.state);
         }
 
         return result;
@@ -443,11 +434,10 @@ public class Compiled
      */
     class DFAState
     {
-
-        Map candidateConditions = new HashMap();
-        DigitalTree events = new DigitalTree(trace);
-        List pseudoRules = new ArrayList();
-        List rules = new ArrayList();
+        Map<Condition, DFAState> candidateConditions = new HashMap<>();
+        DigitalTree<DFAState> events = new DigitalTree<>(trace);
+        List<Rule> pseudoRules = new ArrayList<>();
+        List<Rule> rules = new ArrayList<>();
         int state;
 
         private DFAState()
@@ -470,16 +460,42 @@ public class Compiled
 
     private class NFAState
     {
-        private Condition condition;
-        private List next = new ArrayList();
-        private List pseudoRules = new ArrayList();
-        private List rules = new ArrayList();
+        private List<Next> next = new ArrayList<>();
+        private List<Rule> pseudoRules = new ArrayList<>();
+        private List<Rule> rules = new ArrayList<>();
         private int state;
 
         private NFAState()
         {
-            state = nfaStateCounter++;
+            this.state = nfaStateCounter++;
+        }
+        
+        private NFAState(NFAState original)
+        {
+            this.rules.addAll(original.rules);
+            this.pseudoRules.addAll(original.pseudoRules);
+            this.state = original.state;
         }
     } // NFAState
 
+    private class NFAStateCopier
+    {
+        private final Map<NFAState, NFAState> _copies = new HashMap<>();
+
+        NFAState copy(NFAState original)
+        {
+            NFAState copy = _copies.get(original);
+            if (copy == null)
+            {
+                copy = new NFAState(original);
+                _copies.put(original, copy);
+
+                for (Next n: original.next)
+                {
+                    copy.next.add(new Next(n.event, copy(n.state)));
+                }
+            }
+            return copy;
+        }
+    }
 } // Compiled

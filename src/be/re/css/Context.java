@@ -5,13 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
-
 class Context
-
 {
-
-  List	pageRules = new ArrayList();
-  Map	regions = new HashMap();
-
+    List<CssPageRule> pageRules = new ArrayList<>();
+    Map<String, Map<String, org.w3c.dom.Element>> regions = new HashMap<>();
 } // Context

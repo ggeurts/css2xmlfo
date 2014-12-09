@@ -289,10 +289,10 @@ class NormalizeTableFilter extends XMLFilterImpl
     // a cell belongs, in order to possibly inherit from it. This is only
     // possible when the table is normalized.
 
-    Attributes	atts =
-      Constants.XHTML.equals(parent.namespaceURI) ?
-        inheritXHTMLAlign(element.atts, column, parent) : element.atts;
-    int		index = table.atts.getIndex(Constants.CSS, "border-collapse");
+    Attributes	atts = Constants.XHTML == parent.namespaceURI 
+            ? inheritXHTMLAlign(element.atts, column, parent) 
+            : element.atts;
+    int	index = table.atts.getIndex(Constants.CSS, "border-collapse");
 
     // The following are redundant and harmless for collapse, but it produces
     // something useful for XSL-FO processors that treat collapse as separate.

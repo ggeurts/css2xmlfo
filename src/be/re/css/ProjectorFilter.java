@@ -2,14 +2,12 @@ package be.re.css;
 
 import be.re.xml.Accumulator;
 import be.re.xml.DOMToContentHandler;
-import java.io.IOException;
-import java.io.Reader;
 import java.io.StringReader;
-import java.lang.reflect.UndeclaredThrowableException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -18,10 +16,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 import java.util.StringTokenizer;
-import org.w3c.css.sac.CSSException;
-import org.w3c.css.sac.InputSource;
 import org.w3c.css.sac.LexicalUnit;
-import org.w3c.css.sac.Parser;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
 import org.xml.sax.Attributes;
@@ -52,9 +47,7 @@ import org.xml.sax.helpers.XMLFilterImpl;
  * @author Werner Donn\u00e9
  */
 class ProjectorFilter extends XMLFilterImpl
-
 {
-
     private static final String DEFAULT_CLOSE_QUOTE = "\"";
     private static final String DEFAULT_OPEN_QUOTE = "\"";
 
@@ -87,47 +80,51 @@ class ProjectorFilter extends XMLFilterImpl
         { "upper-roman", "I" },
     };
 
+
+    private final CssResolver cssResolver;
+    private final RuleSet ruleSet = new RuleSet();
+    private final Context context;
     private URL baseUrl = null;
     private boolean collectStyleSheet = false;
-    private Compiled compiled = new Compiled();
-    private Context context;
-    private Stack counters = new Stack();
-    private Stack elements = new Stack();
+    private final Stack counters = new Stack();
+    private final Stack elements = new Stack();
     private String embeddedStyleSheet = "";
-    private int lastRulePosition = 0;
     private Matcher matcher = null;
-    private Stack namedStrings = new Stack();
+    private final Stack namedStrings = new Stack();
     private int quoteDepth = 0;
-    // Filter state because quotes can match across the hole document.
+    // Filter state because quotes can match across the whole document.
     private Map userAgentParameters;
     private URL userAgentStyleSheet = null;
 
     ProjectorFilter(Context context)
     {
-        this(null, null, new HashMap(), context);
+        this(null, null, new HashMap(), context, null);
     }
 
-    ProjectorFilter(URL baseUrl, URL userAgentStyleSheet, Map userAgentParameters, Context context)
+    ProjectorFilter(URL baseUrl, URL userAgentStyleSheet, Map userAgentParameters, Context context, CssResolver cssResolver)
     {
+        this.cssResolver = cssResolver != null
+                ? cssResolver
+                : new DefaultCssResolver();
         this.baseUrl = baseUrl;
-        this.userAgentStyleSheet
-                = userAgentStyleSheet != null
-                        ? userAgentStyleSheet : getClass().getResource("style/ua.css");
+        this.userAgentStyleSheet = userAgentStyleSheet != null
+                ? userAgentStyleSheet 
+                : getClass().getResource("style/ua.css");
         this.userAgentParameters = userAgentParameters;
         this.context = context;
+        
+        context.pageRules = ruleSet.getPageRules();
     }
 
     private static void addFOMarker(Node parent, String name, String value)
     {
-        org.w3c.dom.Element element
-                = parent.getOwnerDocument().createElementNS(Constants.CSS, "css:fo-marker");
-
+        org.w3c.dom.Element element = parent.getOwnerDocument().createElementNS(Constants.CSS, "css:fo-marker");
         element.appendChild(parent.getOwnerDocument().createTextNode(value));
         element.setAttributeNS(Constants.CSS, "css:name", name);
         parent.insertBefore(element, parent.getFirstChild());
     }
 
-    private Rule[] appendStyleAttributeRules(Rule[] matchingRules, Attributes atts, String namespaceURI) throws SAXException
+    private Collection<Rule> appendStyleAttributeRules(Collection<Rule> matchingRules, Attributes atts, String namespaceURI) throws SAXException
     {
         if (Constants.XHTML != namespaceURI)
         {
@@ -141,100 +138,87 @@ class ProjectorFilter extends XMLFilterImpl
             return matchingRules;
         }
 
-        try
+        List<CssRule> rules = CssRule.parseStyle(style);
+        List<Rule> result = new ArrayList<>(matchingRules.size() + rules.size());
+        result.addAll(matchingRules);
+        for (CssRule cssRule : rules)
         {
-            Rule[] rules = getStyleAttributeRules(style);
-            Rule[] result = new Rule[matchingRules.length + rules.length];
-
-            System.arraycopy(matchingRules, 0, result, 0, matchingRules.length);
-            System.arraycopy(rules, 0, result, matchingRules.length, rules.length);
-
-            return result;
-        } catch (IOException e)
-        {
-            throw new SAXException(e);
+            for (Property p : cssRule.getProperties())
+            {
+                result.add(new Rule(cssRule, p, Integer.MAX_VALUE, Integer.MAX_VALUE));
+            }
         }
+        
+        return result;
     }
 
-    private void applyContentProperty(Element element, Rule[] pseudoRules) throws SAXException
+    private void applyContentProperty(Element element, List<Rule> pseudoRules) throws SAXException
     {
-        boolean seen = false;
-
         // From most to least specific.
-        for (int i = pseudoRules.length - 1; i >= 0 && !seen; --i)
+        for (int i = pseudoRules.size() - 1; i >= 0; --i)
         {
-            Property[] properties = pseudoRules[i].getProperties();
+            Property property = pseudoRules.get(i).getProperty();
 
-            for (int j = 0; j < properties.length && !seen; ++j)
+            if ("content".equals(property.getName()) && property.getLexicalUnit().getLexicalUnitType() != LexicalUnit.SAC_INHERIT)
             {
-                if ("content".equals(properties[j].getName())
-                        && properties[j].getLexicalUnit().getLexicalUnitType() != LexicalUnit.SAC_INHERIT)
+                for (LexicalUnit k = property.getLexicalUnit(); k != null; k = k.getNextLexicalUnit())
                 {
-                    seen = true;
-
-                    for (LexicalUnit k = properties[j].getLexicalUnit(); k != null; k = k.getNextLexicalUnit())
+                    switch (k.getLexicalUnitType())
                     {
-                        switch (k.getLexicalUnitType())
-                        {
-                            case LexicalUnit.SAC_ATTR:
-                                serializeAttrFunction(k, element, properties[j].getPrefixMap());
-                                break;
+                        case LexicalUnit.SAC_ATTR:
+                            serializeAttrFunction(k, element, property.getPrefixMap());
+                            break;
 
-                            case LexicalUnit.SAC_COUNTER_FUNCTION:
-                                serializeCounterFunction(k);
-                                break;
+                        case LexicalUnit.SAC_COUNTER_FUNCTION:
+                            serializeCounterFunction(k);
+                            break;
 
-                            case LexicalUnit.SAC_COUNTERS_FUNCTION:
-                                serializeCountersFunction(k);
-                                break;
+                        case LexicalUnit.SAC_COUNTERS_FUNCTION:
+                            serializeCountersFunction(k);
+                            break;
 
-                            case LexicalUnit.SAC_FUNCTION:
-                                serializeFunction(k, element, properties[j].getPrefixMap());
-                                break;
+                        case LexicalUnit.SAC_FUNCTION:
+                            serializeFunction(k, element, property.getPrefixMap());
+                            break;
 
-                            case LexicalUnit.SAC_IDENT:
-                                serializeQuote(k, element);
-                                break;
+                        case LexicalUnit.SAC_IDENT:
+                            serializeQuote(k, element);
+                            break;
 
-                            case LexicalUnit.SAC_STRING_VALUE:
-                                serializeString(k.getStringValue());
-                                break;
+                        case LexicalUnit.SAC_STRING_VALUE:
+                            serializeString(k.getStringValue());
+                            break;
 
-                            case LexicalUnit.SAC_URI:
-                                serializeUriFunction(k);
-                                break;
+                        case LexicalUnit.SAC_URI:
+                            serializeUriFunction(k);
+                            break;
 
-                            default:
-                                break;
-                        }
+                        default:
+                            break;
                     }
                 }
+
+                return;
             }
         }
     }
 
     private void addFirstLetterMarker(Element element)
     {
-        Rule[] pseudoRules = selectPseudoRules(element.matchingPseudoRules, FIRST_LETTER);
+        List<Rule> pseudoRules = selectPseudoRules(element.matchingPseudoRules, FIRST_LETTER);
 
-        if (pseudoRules.length > 0)
+        if (!pseudoRules.isEmpty())
         {
-            element.appliedAttributes.addAttribute(
-                    Constants.CSS,
-                    "has-first-letter",
-                    "css:has-first-letter",
-                    "CDATA",
-                    "1"
-            );
+            element.appliedAttributes.addAttribute(Constants.CSS, "has-first-letter", "css:has-first-letter", "CDATA", "1");
         }
     }
 
-    private void applyPseudoRules(Element element, String name)
-            throws SAXException
+    @SuppressWarnings("StringEquality")
+    private void applyPseudoRules(Element element, String name) throws SAXException
     {
-        Rule[] pseudoRules = selectPseudoRules(element.matchingPseudoRules, name);
+        List<Rule> pseudoRules = selectPseudoRules(element.matchingPseudoRules, name);
 
-        if (pseudoRules.length > 0)
+        if (!pseudoRules.isEmpty())
         {
             AttributesImpl extra = new AttributesImpl();
 
@@ -268,6 +252,7 @@ class ProjectorFilter extends XMLFilterImpl
         }
     }
 
+    @Override
     public void characters(char[] ch, int start, int length) throws SAXException
     {
         if (collectStyleSheet)
@@ -291,30 +276,24 @@ class ProjectorFilter extends XMLFilterImpl
         return "1"; // Decimal is the default.
     }
 
+    @SuppressWarnings("StringEquality")
     private static void detectMarkers(Element element)
     {
-        boolean hasMarkers = false;
-
-        for (int i = 0; i < element.matchingPseudoRules.length && !hasMarkers; ++i)
+        for (Rule rule : element.matchingPseudoRules)
         {
-            hasMarkers = (element.matchingPseudoRules[i].getPseudoElementName() == BEFORE
-                    || element.matchingPseudoRules[i].getPseudoElementName() == AFTER)
-                    && "display".equals(element.matchingPseudoRules[i].getProperty().getName())
-                    && "marker".equals(element.matchingPseudoRules[i].getProperty().getValue());
-        }
-
-        if (hasMarkers)
-        {
-            element.appliedAttributes.addAttribute(
-                    Constants.CSS,
-                    "has-markers",
-                    "css:has-markers",
-                    "CDATA",
-                    "1"
-            );
+            if ((rule.getPseudoElementName() == BEFORE
+                    || rule.getPseudoElementName() == AFTER)
+                    && "display".equals(rule.getProperty().getName())
+                    && "marker".equals(rule.getProperty().getValue()))
+            {
+                // Marker found
+                element.appliedAttributes.addAttribute(Constants.CSS, "has-markers", "css:has-markers", "CDATA", "1");
+                return;
+            }
         }
     }
 
+    @Override
     public void endDocument() throws SAXException
     {
         endPrefixMapping("css");
@@ -324,6 +303,7 @@ class ProjectorFilter extends XMLFilterImpl
         reset();
     }
 
+    @Override
     public void endElement(String namespaceURI, String localName, String qName) throws SAXException
     {
         counters.pop();
@@ -333,16 +313,7 @@ class ProjectorFilter extends XMLFilterImpl
         if (collectStyleSheet)
         {
             collectStyleSheet = false;
-
-            try
-            {
-                parseStyleSheet(new StringReader(embeddedStyleSheet), 0, true);
-            } 
-            catch (IOException e)
-            {
-                throw new SAXException(e);
-            }
-
+            addStyleSheet(cssResolver.getRuleSet(baseUrl, embeddedStyleSheet), 0, true);
             embeddedStyleSheet = "";
         }
 
@@ -391,13 +362,12 @@ class ProjectorFilter extends XMLFilterImpl
             return "";
         }
 
-        Integer value
-                = (Integer) findCounterScope(counter).get(counter.toLowerCase());
+        Integer value = (Integer) findCounterScope(counter).get(counter.toLowerCase());
         String listStyle = getCounterListStyle(function);
 
         return value != null && !"none".equalsIgnoreCase(listStyle)
                 && !"inherit".equalsIgnoreCase(listStyle)
-                        ? getCounterString(value.intValue(), listStyle) 
+                        ? getCounterString(value, listStyle) 
                         : "";
     }
 
@@ -450,13 +420,14 @@ class ProjectorFilter extends XMLFilterImpl
             return s;
         }
 
-        if (quote.getStringValue().equals("no-open-quote"))
+        switch (quote.getStringValue())
         {
-            ++quoteDepth[0];
-        } 
-        else if (quote.getStringValue().equals("no-close-quote"))
-        {
-            --quoteDepth[0];
+            case "no-open-quote":
+                ++quoteDepth[0];
+                break;
+            case "no-close-quote":
+                --quoteDepth[0];
+                break;
         }
 
         return "";
@@ -477,7 +448,7 @@ class ProjectorFilter extends XMLFilterImpl
 
     private Map findCounterScope(String counter)
     {
-        return findScope(counters, counter, new Integer(0));
+        return findScope(counters, counter, 0);
     }
 
     private Map findNamedStringScope(String namedString)
@@ -588,8 +559,7 @@ class ProjectorFilter extends XMLFilterImpl
 
             if (value != null)
             {
-                result += (result.equals("") ? "" : separator)
-                        + getCounterString(value.intValue(), listStyle);
+                result += (result.equals("") ? "" : separator) + getCounterString(value, listStyle);
             }
         }
 
@@ -620,35 +590,32 @@ class ProjectorFilter extends XMLFilterImpl
         return unit;
     }
 
-    private static String[] getSetNamedStringNames(Rule[] rules)
+    private static String[] getSetNamedStringNames(Iterable<Rule> rules)
     {
         Set result = new HashSet();
 
-        for (int i = 0; i < rules.length; ++i)
+        for (Rule rule : rules)
         {
-            Property[] properties = rules[i].getProperties();
+            Property property = rule.getProperty();
 
-            for (int j = 0; j < properties.length; ++j)
+            if ("string-set".equals(property.getName())
+                    && property.getLexicalUnit() != null
+                    && property.getLexicalUnit().getLexicalUnitType() == LexicalUnit.SAC_IDENT
+                    && !"none".equalsIgnoreCase(property.getLexicalUnit().getStringValue()))
             {
-                if ("string-set".equals(properties[j].getName())
-                        && properties[j].getLexicalUnit() != null
-                        && properties[j].getLexicalUnit().getLexicalUnitType() == LexicalUnit.SAC_IDENT
-                        && !"none".equalsIgnoreCase(properties[j].getLexicalUnit().getStringValue()))
+                if (!hasContentsIdentifier // Those are serialized differently.
+                        (
+                                property.getLexicalUnit().getNextLexicalUnit()
+                        ))
                 {
-                    if (!hasContentsIdentifier // Those are serialized differently.
-                            (
-                                    properties[j].getLexicalUnit().getNextLexicalUnit()
-                            ))
-                    {
-                        result.add(properties[j].getLexicalUnit().getStringValue().toLowerCase());
-                    } 
-                    else
-                    {
-                        // In case there is a rule earlier in the cascade that doesn't
-                        // have "contents" as the value for the named string.
+                    result.add(property.getLexicalUnit().getStringValue().toLowerCase());
+                } 
+                else
+                {
+                    // In case there is a rule earlier in the cascade that doesn't
+                    // have "contents" as the value for the named string.
 
-                        result.remove(properties[j].getLexicalUnit().getStringValue().toLowerCase());
-                    }
+                    result.remove(property.getLexicalUnit().getStringValue().toLowerCase());
                 }
             }
         }
@@ -656,41 +623,12 @@ class ProjectorFilter extends XMLFilterImpl
         return (String[]) result.toArray(new String[result.size()]);
     }
 
-    private Rule[] getStyleAttributeRules(String style) throws IOException, SAXException
-    {
-        final List rules = new ArrayList();
-
-        try
-        {
-            parseStyleSheet(
-                    null,
-                    new StringReader("dummy{" + style + "}"),
-                    new RuleCollector.RuleEmitter()
-                    {
-                        public void
-                        addRule(Rule rule)
-                        {
-                            rules.add(rule);
-                        }
-                    },
-                    new ArrayList(),
-                    0,
-                    false
-            );
-        } 
-        catch (MalformedURLException e)
-        {
-            throw new UndeclaredThrowableException(e); // Would be a bug.
-        }
-
-        return (Rule[]) rules.toArray(new Rule[0]);
-    }
-
     public URL getUserAgentStyleSheet()
     {
         return userAgentStyleSheet;
     }
 
+    @SuppressWarnings("StringEquality")
     private void handleControlInformation(String namespaceURI, String localName, AttributesImpl atts) throws SAXException
     {
         try
@@ -731,7 +669,10 @@ class ProjectorFilter extends XMLFilterImpl
                 {
                     if (isMatchingStyleSheet(atts) && atts.getValue("href") != null)
                     {
-                        parseStyleSheet(atts.getValue("href"), 0, true);
+                        URL cssUrl = baseUrl == null
+                                ? new URL(atts.getValue("href"))
+                                : new URL(baseUrl, atts.getValue("href"));
+                        addStyleSheet(cssResolver.getRuleSet(cssUrl), 0, true);
                     }
                 } 
                 else if (STYLE == localName && isMatchingStyleSheet(atts))
@@ -814,12 +755,10 @@ class ProjectorFilter extends XMLFilterImpl
                 {
                     Map scope = findCounterScope(i.getStringValue());
 
-                    scope.put(
-                            counter,
-                            new Integer(((Integer) scope.get(i.getStringValue())).intValue() +   
-                                    (i.getNextLexicalUnit() != null && i.getNextLexicalUnit().getLexicalUnitType() == LexicalUnit.SAC_INTEGER
-                                            ? i.getNextLexicalUnit().getIntegerValue() 
-                                            : 1)));
+                    scope.put(counter, ((Integer) scope.get(i.getStringValue())) +   
+                            (i.getNextLexicalUnit() != null && i.getNextLexicalUnit().getLexicalUnitType() == LexicalUnit.SAC_INTEGER
+                                    ? i.getNextLexicalUnit().getIntegerValue()
+                                    : 1));
                 }
             }
         }
@@ -835,6 +774,7 @@ class ProjectorFilter extends XMLFilterImpl
                 this,
                 new Accumulator.ProcessElement()
                 {
+                    @Override
                     public void process(org.w3c.dom.Element element, XMLFilter filter) throws SAXException
                     {
                         String pageName = element.getAttributeNS(Constants.CSS, "page");
@@ -845,7 +785,7 @@ class ProjectorFilter extends XMLFilterImpl
 
                         element.setAttributeNS(Constants.CSS, "css:page", pageName);
 
-                        Map regionsForPage = (Map) context.regions.get(pageName);
+                        Map<String, org.w3c.dom.Element> regionsForPage = context.regions.get(pageName);
                         if (regionsForPage == null)
                         {
                             regionsForPage = new HashMap();
@@ -917,76 +857,7 @@ class ProjectorFilter extends XMLFilterImpl
                 && !"none".equalsIgnoreCase(region);
     }
 
-    private void parseStyleSheet(String uri, int offset, boolean resetMatcher)
-            throws CSSException, MalformedURLException, IOException, SAXException
-    {
-        parseStyleSheet(uri, null, offset, resetMatcher);
-    }
-
-    private void parseStyleSheet(Reader reader, int offset, boolean resetMatcher)
-            throws CSSException, IOException, SAXException
-    {
-        try
-        {
-            parseStyleSheet(null, reader, offset, resetMatcher);
-        } catch (MalformedURLException e)
-        {
-            throw new UndeclaredThrowableException(e); // Would be a bug.
-        }
-    }
-
-    private void parseStyleSheet(String uri, Reader reader, int offset, boolean resetMatcher)
-            throws CSSException, MalformedURLException, IOException, SAXException
-    {
-        parseStyleSheet(
-                uri,
-                reader,
-                new RuleCollector.RuleEmitter()
-                {
-                    public void
-                    addRule(Rule rule)
-                    {
-                        compiled.addRule(rule);
-                    }
-                },
-                context.pageRules,
-                offset,
-                resetMatcher
-        );
-    }
-
-    private void parseStyleSheet(String uri, Reader reader, RuleCollector.RuleEmitter ruleEmitter, List pageRules, int offset, boolean resetMatcher) 
-            throws CSSException, MalformedURLException, IOException, SAXException
-    {
-        URL base = !elements.isEmpty() && ((Element) elements.peek()).baseUrl != null
-                ? ((Element) elements.peek()).baseUrl 
-                : baseUrl;
-        Parser parser = Util.getSacParser();
-        InputSource source
-                = reader != null ? new InputSource(reader) : new InputSource();
-
-        source.setURI(base != null && uri != null
-                ? new URL(base, uri).toString()
-                : (base != null ? base.toString() : uri)
-        );
-
-        RuleCollector collector = new RuleCollector(
-                        ruleEmitter,
-                        pageRules,
-                        source.getURI() != null ? new URL(source.getURI()) : null,
-                        lastRulePosition,
-                        offset);
-
-        parser.setDocumentHandler(collector);
-        parser.parseStyleSheet(source);
-        lastRulePosition = collector.getCurrentPosition();
-
-        if (resetMatcher)
-        {
-            setMatcher();
-        }
-    }
-
+    @Override
     public void processingInstruction(String target, String data) throws SAXException
     {
         if ("xml-stylesheet".equalsIgnoreCase(target))
@@ -1017,7 +888,11 @@ class ProjectorFilter extends XMLFilterImpl
             {
                 try
                 {
-                    parseStyleSheet(uri.substring(1, uri.length() - 1), 0, true);
+                    String cssUri = uri.substring(1, uri.length() - 1);
+                    URL cssUrl = baseUrl == null
+                            ? new URL(cssUri)
+                            : new URL(baseUrl, cssUri);
+                    addStyleSheet(cssResolver.getRuleSet(cssUrl), 0, true);
                 } 
                 catch (Exception e)
                 {
@@ -1043,8 +918,7 @@ class ProjectorFilter extends XMLFilterImpl
 
     private void reset()
     {
-        context.pageRules.clear();
-        compiled = new Compiled();
+        ruleSet.clear();
         matcher = null;
         collectStyleSheet = false;
         embeddedStyleSheet = "";
@@ -1066,15 +940,10 @@ class ProjectorFilter extends XMLFilterImpl
 
                 if (display || "page".equals(counter))
                 {
-                    ((Map) counters.peek()).put(
-                            counter,
-                            new Integer(
-                                    i.getNextLexicalUnit() != null
-                                    && i.getNextLexicalUnit().getLexicalUnitType() == LexicalUnit.SAC_INTEGER
-                                            ? i.getNextLexicalUnit().getIntegerValue() :
-                                            0
-                            )
-                    );
+                    ((Map) counters.peek()).put(counter, i.getNextLexicalUnit() != null
+                            && i.getNextLexicalUnit().getLexicalUnitType() == LexicalUnit.SAC_INTEGER
+                            ? i.getNextLexicalUnit().getIntegerValue() :
+                            0);
                 }
             }
         }
@@ -1104,19 +973,20 @@ class ProjectorFilter extends XMLFilterImpl
     /**
      * Maintains the order.
      */
-    private static Rule[] selectPseudoRules(Rule[] rules, String pseudoElementName)
+    @SuppressWarnings("StringEquality")
+    private static List<Rule> selectPseudoRules(Iterable<Rule> rules, String pseudoElementName)
     {
-        List result = new ArrayList();
+        List<Rule> result = new ArrayList<>();
 
-        for (int i = 0; i < rules.length; ++i)
+        for (Rule rule : rules)
         {
-            if (pseudoElementName == rules[i].getPseudoElementName())
+            if (pseudoElementName == rule.getPseudoElementName())
             {
-                result.add(rules[i]);
+                result.add(rule);
             }
         }
 
-        return (Rule[]) result.toArray(new Rule[0]);
+        return result;
     }
 
     private void serializeAttrFunction(LexicalUnit unit, Element element, Map prefixMap) throws SAXException
@@ -1153,28 +1023,27 @@ class ProjectorFilter extends XMLFilterImpl
         }
     }
 
-    private void
-            serializeCounterFunction(LexicalUnit unit) throws SAXException
+    private void serializeCounterFunction(LexicalUnit unit) throws SAXException
     {
-        if (unit.getParameters() == null)
-        {
-            return;
-        }
+        if (unit.getParameters() == null) return;
 
         String counter = unit.getParameters().getStringValue().toLowerCase();
-
-        if ("page".equals(counter)) // Special synthetic counter.
+        if (counter == null) return;
+        
+        switch (counter)
         {
-            serializePageNumber(getCounterListStyle(unit));
-        }
-        else if ("pages".equals(counter)) // Special synthetic counter.
-        {
-            serializePagesTotal();
-        }
-        else
-        {
-            String value = evaluateCounterFunction(unit);
-            super.characters(value.toCharArray(), 0, value.length());
+            // Special synthetic counter.
+            case "page":
+                serializePageNumber(getCounterListStyle(unit));
+                break;
+             // Special synthetic counter.
+            case "pages":
+                serializePagesTotal();
+                break;
+            default:
+                String value = evaluateCounterFunction(unit);
+                super.characters(value.toCharArray(), 0, value.length());
+                break;
         }
     }
 
@@ -1184,8 +1053,7 @@ class ProjectorFilter extends XMLFilterImpl
         super.characters(value.toCharArray(), 0, value.length());
     }
 
-    private void
-            serializeFOMarkers(Rule[] rules) throws SAXException
+    private void serializeFOMarkers(Iterable<Rule> rules) throws SAXException
     {
         String[] names = getSetNamedStringNames(rules);
 
@@ -1349,7 +1217,7 @@ class ProjectorFilter extends XMLFilterImpl
      * also has a side effect in that it adjusts the counters and named strings.
      * This was done in order to scan the matching rules only once.
      */
-    private AttributesImpl setCSSAttributes(Rule[] matchingRules, Attributes attributes) throws SAXException
+    private AttributesImpl setCSSAttributes(Iterable<Rule> matchingRules, Attributes attributes) throws SAXException
     {
         Property counterIncrement = null;
         Property counterReset = null;
@@ -1358,42 +1226,30 @@ class ProjectorFilter extends XMLFilterImpl
         Property stringSet = null;
 
         // From least to most specific.
-        for (int i = 0; i < matchingRules.length; ++i)
+        for (Rule rule : matchingRules)
         {
-            Property property = matchingRules[i].getProperties()[0];
+            Property property = rule.getProperty();
             String propertyName = property.getName();
 
-            if (propertyName.equals("counter-increment"))
+            switch (propertyName)
             {
-                counterIncrement = property;
-            } else
-            {
-                if (propertyName.equals("counter-reset"))
-                {
+                case "counter-increment":
+                    counterIncrement = property;
+                    break;
+                case "counter-reset":
                     counterReset = property;
-                } else
-                {
-                    if (propertyName.equals("string-set"))
+                    break;
+                case "string-set":
+                    if (rule.getPseudoElementName() == null)
                     {
-                        if (matchingRules[i].getPseudoElementName() == null)
-                        {
-                            stringSet = property;
-                        }
-                    } else
+                        stringSet = property;
+                    }   break;
+                default:
+                    Util.setCSSAttribute(result, property, rule.getSpecificity());
+                    if (propertyName.equals("display") && "none".equalsIgnoreCase(property.getValue()))
                     {
-                        Util.setCSSAttribute(
-                                result,
-                                property,
-                                matchingRules[i].getSpecificity()
-                        );
-
-                        if (propertyName.equals("display")
-                                && "none".equalsIgnoreCase(property.getValue()))
-                        {
-                            displayNone = true;
-                        }
-                    }
-                }
+                        displayNone = true;
+                    }   break;
             }
         }
 
@@ -1415,13 +1271,16 @@ class ProjectorFilter extends XMLFilterImpl
         return result;
     }
 
-    private void setMatcher() throws SAXException
+    private void addStyleSheet(CssRuleSet cssRuleSet, int offset, boolean resetMatcher) throws SAXException
     {
-        compiled.generateDFA();
-        matcher = new Matcher(compiled);
-        repositionMatcher();
+        ruleSet.addRuleSet(cssRuleSet, offset);
+        if (resetMatcher)
+        {
+            matcher = new Matcher(ruleSet.getCompiledRules());
+            repositionMatcher();
+        }
     }
-
+    
     private void setNamedString(Property stringSet) throws SAXException
     {
         if (stringSet.getLexicalUnit() == null
@@ -1495,12 +1354,11 @@ class ProjectorFilter extends XMLFilterImpl
     {
         Element element = (Element) elements.peek();
 
-        for (int i = 0; i < element.matchingElementRules.length; ++i)
+        for (Rule rule : element.matchingElementRules)
         {
-            Property[] properties = element.matchingElementRules[i].getProperties();
-            if (properties[0].getName().equals("quotes"))
+            if (rule.getProperty().getName().equals("quotes"))
             {
-                element.quotes = properties[0].getLexicalUnit();
+                element.quotes = rule.getProperty().getLexicalUnit();
             }
         }
 
@@ -1550,22 +1408,24 @@ class ProjectorFilter extends XMLFilterImpl
         return result;
     }
 
+    @Override
     public void startDocument() throws SAXException
     {
         reset();
 
         try
         {
-            parseStyleSheet(new StringReader("*{display: inline}"), -2, true);
+            addStyleSheet(CssRuleSet.parse("*{display: inline}"), -2, false);
 
             String htmlHeaderMark = (String) userAgentParameters.get("html-header-mark");
             if (htmlHeaderMark != null)
             {
-                parseStyleSheet(new StringReader(htmlHeaderMark + "{string-set: component contents}"), -2, true);
+                addStyleSheet(CssRuleSet.parse(htmlHeaderMark + "{string-set: component contents}"), -2, false);
             }
 
-            parseStyleSheet(userAgentStyleSheet.toString(), -1, true);
-        } catch (Exception e)
+            addStyleSheet(cssResolver.getRuleSet(userAgentStyleSheet), -1, true);
+        } 
+        catch (Exception e)
         {
             throw new SAXException(e);
         }
@@ -1584,6 +1444,7 @@ class ProjectorFilter extends XMLFilterImpl
     /**
      * The string arguments are interned.
      */
+    @Override
     public void startElement(String namespaceURI, String localName, String qName, Attributes atts) throws SAXException
     {
         if (namespaceURI != null)
@@ -1635,7 +1496,7 @@ class ProjectorFilter extends XMLFilterImpl
         namedStrings.push(new HashMap());
     }
 
-    private static void            translateId(AttributesImpl atts)
+    private static void translateId(AttributesImpl atts)
     {
         for (int i = 0; i < atts.getLength(); ++i)
         {
@@ -1648,14 +1509,13 @@ class ProjectorFilter extends XMLFilterImpl
 
     private static class Element
     {
-
         private AttributesImpl appliedAttributes;
         private AttributesImpl attributes = new AttributesImpl();
         private URL baseUrl;
         private boolean floating = false;
         private String localName;
-        private Rule[] matchingElementRules = null;
-        private Rule[] matchingPseudoRules = null;
+        private Collection<Rule> matchingElementRules = null;
+        private Collection<Rule> matchingPseudoRules = null;
         private String namespaceURI;
         private String qName;
         private LexicalUnit quotes = null;
@@ -1666,7 +1526,6 @@ class ProjectorFilter extends XMLFilterImpl
             this.localName = localName;
             this.qName = qName;
         }
-
     } // Element
 
 } // ProjectorFilter

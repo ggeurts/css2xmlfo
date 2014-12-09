@@ -1,6 +1,6 @@
 package be.re.css;
 
-import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,7 +8,6 @@ import org.w3c.css.sac.CSSException;
 import org.w3c.css.sac.DocumentHandler;
 import org.w3c.css.sac.InputSource;
 import org.w3c.css.sac.LexicalUnit;
-import org.w3c.css.sac.Parser;
 import org.w3c.css.sac.SACMediaList;
 import org.w3c.css.sac.SelectorList;
 
@@ -18,84 +17,74 @@ import org.w3c.css.sac.SelectorList;
  *
  * @author Werner Donn\u00e9
  */
-class RuleCollector implements DocumentHandler
+class CssRuleCollector implements DocumentHandler
 {
-
-    private URL baseUrl;
-    private RuleEmitter ruleEmitter;
-    private PageRule currentPageRule = null;
-    private Rule[] currentRules = null;
+    private final CssRuleSet.Builder cssBuilder;
+    private final Map prefixMap = new HashMap();
+    private CssPageRule currentPageRule = null;
+    private final List<CssRule> currentRules = new ArrayList<>();
     private boolean ignore = false;
-    private int offset;
-    private List pageRules;
-    private Map prefixMap = new HashMap();
-    private int position;
 
-    RuleCollector(RuleEmitter ruleEmitter, List pageRules, URL baseUrl, int startPosition, int offset)
+    CssRuleCollector(CssRuleSet.Builder cssBuilder)
     {
-        this.ruleEmitter = ruleEmitter;
-        this.pageRules = pageRules;
-        this.baseUrl = baseUrl;
-        this.position = startPosition;
-        this.offset = offset;
+        this.cssBuilder = cssBuilder;
+        if (cssBuilder == null)
+        {
+            currentRules.add(new CssRule());
+        }
     }
 
+    public List<CssRule> getRules()
+    {
+        return currentRules;
+    }
+    
+    @Override
     public void comment(String text) throws CSSException
     {
     }
 
+    @Override
     public void endDocument(InputSource source) throws CSSException
     {
     }
 
+    @Override
     public void endFontFace() throws CSSException
     {
     }
 
+    @Override
     public void endMedia(SACMediaList media) throws CSSException
     {
         ignore = false;
     }
 
+    @Override
     public void endPage(String name, String pseudoPage) throws CSSException
     {
-        if (currentPageRule.getProperties().length > 0)
+        if (currentPageRule.getProperties().isEmpty())
         {
-            PageRule[] split = currentPageRule.split();
-
-            for (int i = 0; i < split.length; ++i)
-            {
-                pageRules.add(split[i]);
-            }
+            cssBuilder.addPageRule(currentPageRule);
         }
 
         currentPageRule = null;
     }
 
+    @Override
     public void endSelector(SelectorList selectors) throws CSSException
     {
         if (!ignore)
         {
-            for (int i = 0; i < currentRules.length; ++i)
+            for (CssRule rule : currentRules)
             {
-                if (currentRules[i].getProperties().length > 0)
+                if (!rule.getProperties().isEmpty())
                 {
-                    Rule[] split = currentRules[i].split();
-
-                    for (int j = 0; j < split.length; ++j)
-                    {
-                        ruleEmitter.addRule(split[j]);
-                    }
+                    cssBuilder.addRule(rule);
                 }
             }
-
-            currentRules = null;
+            currentRules.clear();
         }
-    }
-
-    int getCurrentPosition()
-    {
-        return position;
     }
 
     private boolean hasOneOfMedia(SACMediaList media, String[] choices)
@@ -119,55 +108,43 @@ class RuleCollector implements DocumentHandler
         return false;
     }
 
+    @Override
     public void ignorableAtRule(String atRule) throws CSSException
     {
     }
 
-    public void importStyle(String uri, SACMediaList media, String defaultNamespaceURI)
-            throws CSSException
+    @Override
+    public void importStyle(String uri, SACMediaList media, String defaultNamespaceURI) throws CSSException
     {
         if (!ignore)
         {
             if (media == null || hasOneOfMedia(media, new String[] { "all", "print" }))
             {
-                try
-                {
-                    Parser parser = Util.getSacParser();
-                    URL url
-                            = (baseUrl != null ? new URL(baseUrl, uri) : new URL(uri));
-
-                    RuleCollector importCollector
-                            = new RuleCollector(ruleEmitter, pageRules, url, position, offset);
-                    parser.setDocumentHandler(importCollector);
-                    parser.parseStyleSheet(url.toString());
-                    position = importCollector.getCurrentPosition();
-                }
-                catch (Exception e)
-                {
-                    throw new CSSException(e);
-                }
+                cssBuilder.include(uri);
             }
         }
     }
 
+    @Override
     public void namespaceDeclaration(String prefix, String uri) throws CSSException
     {
         prefixMap.put(prefix, uri);
     }
 
+    @Override
     public void property(String name, LexicalUnit value, boolean important) throws CSSException
     {
         if (!ignore)
         {
-            Property[] properties = new Property(name.toLowerCase(), value, important, prefixMap, baseUrl).split();
+            Property[] properties = new Property(name.toLowerCase(), value, important, prefixMap, cssBuilder.getUrl()).split();
 
-            if (currentRules != null)
+            if (!currentRules.isEmpty())
             {
-                for (int i = 0; i < currentRules.length; ++i)
+                for (CssRule rule : currentRules)
                 {
                     for (int j = 0; j < properties.length; ++j)
                     {
-                        currentRules[i].addProperty(properties[j]);
+                        rule.addProperty(properties[j]);
                     }
                 }
             } 
@@ -184,7 +161,7 @@ class RuleCollector implements DocumentHandler
                     {
                         properties[i] = unit.getNextLexicalUnit() == null
                                 ? new Property("initial-page-number", "1", properties[i].getImportant(), prefixMap)
-                                : new Property("initial-page-number", unit.getNextLexicalUnit(), properties[i].getImportant(), prefixMap, baseUrl);
+                                : new Property("initial-page-number", unit.getNextLexicalUnit(), properties[i].getImportant(), prefixMap, cssBuilder.getUrl());
                     }
                     currentPageRule.addProperty(properties[i]);
                 }
@@ -192,14 +169,17 @@ class RuleCollector implements DocumentHandler
         }
     }
 
+    @Override
     public void startDocument(InputSource source) throws CSSException
     {
     }
 
+    @Override
     public void startFontFace() throws CSSException
     {
     }
 
+    @Override
     public void startMedia(SACMediaList media) throws CSSException
     {
         ignore = !hasOneOfMedia(media, new String[]
@@ -208,40 +188,31 @@ class RuleCollector implements DocumentHandler
         });
     }
 
+    @Override
     public void startPage(final String name, final String pseudoPage) throws CSSException
     {
         if (!ignore)
         {
-            currentPageRule = new PageRule(
+            currentPageRule = new CssPageRule(
                     name != null && pseudoPage != null
                             ? (pseudoPage + "-" + name)
                             : (name != null
-                                    ? name : (pseudoPage != null ? pseudoPage : "unnamed")),
-                    position++
-            );
+                                    ? name 
+                                    : (pseudoPage != null 
+                                            ? pseudoPage 
+                                            : "unnamed")));
         }
     }
 
+    @Override
     public void startSelector(SelectorList selectors) throws CSSException
     {
-        if (ignore || selectors.getLength() == 0)
+        currentRules.clear();
+        if (ignore || selectors.getLength() == 0) return;
+
+        for (int i = 0; i < selectors.getLength(); ++i)
         {
-            currentRules = null;
-
-            return;
-        }
-
-        currentRules = new Rule[selectors.getLength()];
-
-        for (int i = 0; i < currentRules.length; ++i)
-        {
-            currentRules[i] = new Rule(selectors.item(i), position++, offset);
+            currentRules.add(new CssRule(selectors.item(i)));
         }
     }
-
-    interface RuleEmitter
-    {
-
-        public void addRule(Rule rule);
-    } // RuleEmitter
 } // RuleCollector

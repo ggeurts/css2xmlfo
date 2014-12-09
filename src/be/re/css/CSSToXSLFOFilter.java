@@ -94,7 +94,7 @@ public class CSSToXSLFOFilter extends XMLFilterImpl
 
     try
     {
-      Context	context = new Context();
+      Context context = new Context();
 
       projectorFilter =
         new ProjectorFilter
@@ -102,7 +102,8 @@ public class CSSToXSLFOFilter extends XMLFilterImpl
           baseUrl,
           userAgentStyleSheet,
           userAgentParameters,
-          context
+          context,
+          new DefaultCssResolver()
         );
 
       postProjectionFilter =
