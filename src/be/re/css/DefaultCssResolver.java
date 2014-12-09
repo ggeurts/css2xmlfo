@@ -6,7 +6,6 @@
 package be.re.css;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.net.URL;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -15,8 +14,9 @@ import org.w3c.css.sac.InputSource;
 import org.w3c.css.sac.Parser;
 
 /**
- *
- * @author ggeurts
+ * Default implementation of {@link CssResolver} interface. Retrieves and
+ * caches CSS style sheets. This class is thread-safe.
+ * @author Gerke Geurts
  */
 public class DefaultCssResolver implements CssResolver
 {
@@ -30,25 +30,6 @@ public class DefaultCssResolver implements CssResolver
         
         result = parseStyleSheet(styleSheetUrl);
         return cachedRules.putIfAbsent(styleSheetUrl, result);
-    }
-    
-    @Override
-    public CssRuleSet getRuleSet(URL baseUrl, String styleSheet) throws CSSException
-    {
-        try
-        {
-            InputSource source = new InputSource(new StringReader(styleSheet));
-            CssRuleSet.Builder builder = new CssRuleSet.Builder(baseUrl, this);
-            CssRuleCollector collector = new CssRuleCollector(builder);
-            Parser parser = Util.getSacParser();
-            parser.setDocumentHandler(collector);
-            parser.parseStyleSheet(source);
-            return builder.getRuleSet();
-        }
-        catch (IOException e)
-        {
-            throw new CSSException(e);
-        }
     }
     
     private CssRuleSet parseStyleSheet(URL styleSheetUrl) throws CSSException

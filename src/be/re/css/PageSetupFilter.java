@@ -1,6 +1,5 @@
 package be.re.css;
 
-import be.re.util.Array;
 import be.re.xml.DOMToContentHandler;
 import be.re.xml.sax.GobbleDocumentEvents;
 import be.re.xml.sax.FilterOfFilters;
@@ -14,10 +13,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedMap;
-import java.util.SortedSet;
 import java.util.Stack;
-import java.util.TreeMap;
 import java.util.TreeSet;
 import org.w3c.dom.Node;
 import org.xml.sax.Attributes;
@@ -36,7 +32,6 @@ import org.xml.sax.helpers.XMLFilterImpl;
  */
 class PageSetupFilter extends XMLFilterImpl
 {
-    private static final String DEFAULT_COLUMN_COUNT = "1";
     private static final String DEFAULT_REGION_HEIGHT = "10mm";
     private static final String DEFAULT_REGION_WIDTH = "20mm";
 
@@ -51,12 +46,11 @@ class PageSetupFilter extends XMLFilterImpl
         { "blank-left-named", "unnamed", "left", "blank", "named" },
         { "blank-right-named", "unnamed", "right", "blank", "named" }
     };
-    private static final String[] prefixes
-            = new String[]
-            {
-                "first-left-", "first-right-", "blank-left-", "blank-right-", "first-",
-                "blank-", "left-", "right-", "last-left-", "last-right-", "last-"
-            };
+    private static final String[] prefixes = new String[]
+    {
+        "first-left-", "first-right-", "blank-left-", "blank-right-", "first-",
+        "blank-", "left-", "right-", "last-left-", "last-right-", "last-"
+    };
     private static final String[][] regionInheritanceTable =
     {
         { "first-left-named", "first-named", "first-left", "first", "left-named", "left", "named", "unnamed" },
@@ -68,14 +62,19 @@ class PageSetupFilter extends XMLFilterImpl
         { "blank-left-named", "blank-named", "blank-left", "blank", "left-named", "left", "named", "unnamed" },
         { "blank-right-named", "blank-named", "blank-right", "blank", "right-named", "right", "named", "unnamed" }
     };
-
+    private static final String[] extentOrder = new String[] 
+    { 
+        "region-before", "region-after", "region-start", "region-end" 
+    };
+    
+    
     private URL baseUrl;
     private final Context context;
     private final boolean debug;
     private final Stack<Element> elements = new Stack<>();
-    private final Map userAgentParameters;
+    private final Map<String, String> userAgentParameters;
 
-    PageSetupFilter(Context context, URL baseUrl, Map userAgentParameters, boolean debug)
+    PageSetupFilter(Context context, URL baseUrl, Map<String, String> userAgentParameters, boolean debug)
     {
         this.context = context;
         this.baseUrl = baseUrl;
@@ -83,7 +82,7 @@ class PageSetupFilter extends XMLFilterImpl
         this.debug = debug;
     }
 
-    PageSetupFilter(Context context, URL baseUrl, Map userAgentParameters, XMLReader parent, boolean debug)
+    PageSetupFilter(Context context, URL baseUrl, Map<String, String> userAgentParameters, XMLReader parent, boolean debug)
     {
         super(parent);
         this.context = context;
@@ -226,7 +225,7 @@ class PageSetupFilter extends XMLFilterImpl
 
         if (columnCount == null)
         {
-            columnCount = (String) userAgentParameters.get("column-count");
+            columnCount = userAgentParameters.get("column-count");
         }
         if (columnCount != null)
         {
@@ -429,14 +428,14 @@ class PageSetupFilter extends XMLFilterImpl
      * successor overrides the values of its predecessors. This implements the
      * cascade.
      */
-    private Attributes getPageAttributes(Map<String, CssPageRule> pageRules, String pageName, String[] names)
+    private Attributes getPageAttributes(Map<String, CssPageRule> pageRulesByName, String pageName, String[] names)
     {
         AttributesImpl result = new AttributesImpl();
         result.addAttribute(Constants.CSS, "name", "css:name", "CDATA", pageName);
 
         for (int i = 0; i < names.length; ++i)
         {
-            CssPageRule pageRule = pageRules.get(names[i]);
+            CssPageRule pageRule = pageRulesByName.get(names[i]);
             if (pageRule != null)
             {
                 for (Property p : pageRule.getProperties())
@@ -492,7 +491,7 @@ class PageSetupFilter extends XMLFilterImpl
 
     private static String getSpecificPageName(String symbolicName, String page)
     {
-        return symbolicName.indexOf("-named") != -1
+        return symbolicName.contains("-named")
                 ? symbolicName.substring(0, symbolicName.indexOf("-named")) + "-" + page
                 : ("named".equals(symbolicName) 
                         ? page 
@@ -529,6 +528,7 @@ class PageSetupFilter extends XMLFilterImpl
         }
     }
 
+    @Override
     public void processingInstruction(String target, String data) throws SAXException
     {
         if (shouldEmitContents())
@@ -539,19 +539,20 @@ class PageSetupFilter extends XMLFilterImpl
 
     private void applyPageRules() throws SAXException
     {
-        if (context.pageRules.size() == 0) return;
+        List<CssPageRule> pageRules = context.ruleSet.getPageRules();
+        if (pageRules.isEmpty()) return;
 
-        addUnnamedPageRule(context.pageRules);
-        Map<String, CssPageRule> pageRules = recomposePageRules(sortPageRules(context.pageRules));
+        addUnnamedPageRule(pageRules);
+        Map<String, CssPageRule> pageRulesByName = recomposePageRules(sortPageRules(pageRules));
 
         super.startElement(Constants.CSS, "pages", "css:pages", new AttributesImpl());
 
-        Collection<String> names = getPageRuleNames(pageRules.values());
+        Collection<String> names = getPageRuleNames(pageRulesByName.values());
         for (String name : names)
         {
             generatePage(
                     getPageAttributes(
-                            pageRules,
+                            pageRulesByName,
                             name,
                             getInheritanceTableEntry(pageInheritanceTable, name)
                     )
@@ -588,45 +589,41 @@ class PageSetupFilter extends XMLFilterImpl
 
     private static List<CssPageRule> sortPageRules(List<CssPageRule> pageRules)
     {
-        Comparator<CssPageRule> ruleComparator = new Comparator<CssPageRule>()
+        Comparator<CssPageRule> ruleComparator = (CssPageRule rule1, CssPageRule rule2) ->
         {
-            @Override
-            public int compare(CssPageRule rule1, CssPageRule rule2)
+            String name1 = rule1.getName();
+            String name2 = rule2.getName();
+            int result1 = !"unnamed".equals(name1) && "unnamed".equals(name2)
+                    ? 1
+                    : ("unnamed".equals(name1) && !"unnamed".equals(name2) ? -1 : 0);
+            if (result1 == 0)
             {
-                String name1 = rule1.getName();
-                String name2 = rule2.getName();
-                int result1 = !"unnamed".equals(name1) && "unnamed".equals(name2)
-                        ? 1
-                        : ("unnamed".equals(name1) && !"unnamed".equals(name2) ? -1 : 0);
-                if (result1 == 0)
-                {
-                    result1 = "first".equals(name1) && !"first".equals(name2)
-                            ? 1 : (!"first".equals(name1) && "first".equals(name2) ? -1 : 0);
-                }
-                if (result1 == 0)
-                {
-                    result1 = "last".equals(name1) && !"last".equals(name2)
-                            ? 1 : (!"last".equals(name1) && "last".equals(name2) ? -1 : 0);
-                }
-                if (result1 == 0)
-                {
-                    result1 = "left".equals(name1) && !"left".equals(name2)
-                            ? 1 : (!"left".equals(name1) && "left".equals(name2) ? -1 : 0);
-                }
-                if (result1 == 0)
-                {
-                    result1 = "right".equals(name1) && !"right".equals(name2)
-                            ? 1 : (!"right".equals(name1) && "right".equals(name2) ? -1 : 0);
-                }
-                if (result1 == 0)
-                {
-                    result1 = pageRules.indexOf(rule1) - pageRules.indexOf(rule2);
-                }
-                return result1;
+                result1 = "first".equals(name1) && !"first".equals(name2)
+                        ? 1 : (!"first".equals(name1) && "first".equals(name2) ? -1 : 0);
             }
+            if (result1 == 0)
+            {
+                result1 = "last".equals(name1) && !"last".equals(name2)
+                        ? 1 : (!"last".equals(name1) && "last".equals(name2) ? -1 : 0);
+            }
+            if (result1 == 0)
+            {
+                result1 = "left".equals(name1) && !"left".equals(name2)
+                        ? 1 : (!"left".equals(name1) && "left".equals(name2) ? -1 : 0);
+            }
+            if (result1 == 0)
+            {
+                result1 = "right".equals(name1) && !"right".equals(name2)
+                        ? 1 : (!"right".equals(name1) && "right".equals(name2) ? -1 : 0);
+            }
+            if (result1 == 0)
+            {
+                result1 = pageRules.indexOf(rule1) - pageRules.indexOf(rule2);
+            }
+            return result1;
         };
 
-        List<CssPageRule> result = new ArrayList<CssPageRule>(pageRules);
+        List<CssPageRule> result = new ArrayList<>(pageRules);
         result.sort(ruleComparator);
         return result;
     }
@@ -656,6 +653,7 @@ class PageSetupFilter extends XMLFilterImpl
         return result;
     }
 
+    @SuppressWarnings("empty-statement")
     private void reopenElementsInBodyRegion(boolean span) throws SAXException
     {
         int i;
@@ -706,32 +704,19 @@ class PageSetupFilter extends XMLFilterImpl
 
     private static Collection sortExtents(Collection extents)
     {
-        Collection result
-                = new TreeSet(
-                        new Comparator()
-                        {
-                            public int
-                            compare(Object o1, Object o2)
-                            {
-                                String[] ordered
-                                = new String[]
-                                {
-                                    "region-before", "region-after", "region-start", "region-end"
-                                };
-
-                                return Util.indexOf(ordered, ((Node) o1).getLocalName())
-                                - Util.indexOf(ordered, ((Node) o2).getLocalName());
-                            }
-                        }
-                );
+        Collection result = new TreeSet((Object o1, Object o2) ->
+        {
+            return Util.indexOf(extentOrder, ((Node) o1).getLocalName())
+                    - Util.indexOf(extentOrder, ((Node) o2).getLocalName());
+        });
 
         result.addAll(extents);
 
         return result;
     }
 
-    public void
-            startDocument() throws SAXException
+    @Override
+    public void startDocument() throws SAXException
     {
         super.startDocument();
         startPrefixMapping("css", Constants.CSS);
@@ -741,6 +726,7 @@ class PageSetupFilter extends XMLFilterImpl
         getParent().setContentHandler(new Recorder());
     }
 
+    @Override
     public void startElement(String namespaceURI, String localName, String qName, Attributes atts) throws SAXException
     {
         String display = atts.getValue(Constants.CSS, "display");
@@ -869,9 +855,10 @@ class PageSetupFilter extends XMLFilterImpl
 
     private class Recorder extends XMLFilterImpl
     {
-        private List events = new ArrayList();
-        private Stack<Element> elements = new Stack<>();
+        private final List<Event> events = new ArrayList<>();
+        private final Stack<Element> elements = new Stack<>();
 
+        @Override
         public void endElement(String namespaceURI, String localName, String qName) throws SAXException
         {
             elements.pop();
@@ -882,8 +869,7 @@ class PageSetupFilter extends XMLFilterImpl
         {
             for (int i = 0; i < events.size(); ++i)
             {
-                Event event = (Event) events.get(i);
-
+                Event event = events.get(i);
                 if (event.atts != null)
                 {
                     PageSetupFilter.this.startElement(event.namespaceURI, event.localName, event.qName, event.atts);
@@ -895,11 +881,12 @@ class PageSetupFilter extends XMLFilterImpl
             }
         }
 
+        @Override
         public void startElement(String namespaceURI, String localName, String qName, Attributes atts) throws SAXException
         {
             events.add(new Event(namespaceURI, localName, qName, atts));
 
-            if (!elements.isEmpty() && ((Element) elements.peek()).inBodyRegion)
+            if (!elements.isEmpty() && elements.peek().inBodyRegion)
             {
                 replayEvents();
                 PageSetupFilter.this.getParent().setContentHandler(PageSetupFilter.this);

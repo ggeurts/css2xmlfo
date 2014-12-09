@@ -16,6 +16,7 @@ import org.w3c.css.sac.SelectorList;
  * The other media are ignored. Rules without any properties are also ignored.
  *
  * @author Werner Donn\u00e9
+ * @author Gerke Geurts
  */
 class CssRuleCollector implements DocumentHandler
 {

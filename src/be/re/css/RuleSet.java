@@ -10,7 +10,7 @@ import java.util.List;
 
 /**
  *
- * @author ggeurts
+ * @author Gerke Geurts
  */
 public class RuleSet
 {

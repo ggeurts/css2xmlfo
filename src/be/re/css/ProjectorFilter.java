@@ -2,7 +2,6 @@ package be.re.css;
 
 import be.re.xml.Accumulator;
 import be.re.xml.DOMToContentHandler;
-import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.MessageFormat;
@@ -16,6 +15,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 import java.util.StringTokenizer;
+import org.w3c.css.sac.CSSException;
 import org.w3c.css.sac.LexicalUnit;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
@@ -45,6 +45,7 @@ import org.xml.sax.helpers.XMLFilterImpl;
  * class into XSL-FO.
  *
  * @author Werner Donn\u00e9
+ * @author Gerke Geurts
  */
 class ProjectorFilter extends XMLFilterImpl
 {
@@ -82,7 +83,6 @@ class ProjectorFilter extends XMLFilterImpl
 
 
     private final CssResolver cssResolver;
-    private final RuleSet ruleSet = new RuleSet();
     private final Context context;
     private URL baseUrl = null;
     private boolean collectStyleSheet = false;
@@ -93,7 +93,7 @@ class ProjectorFilter extends XMLFilterImpl
     private final Stack namedStrings = new Stack();
     private int quoteDepth = 0;
     // Filter state because quotes can match across the whole document.
-    private Map userAgentParameters;
+    private Map<String, String> userAgentParameters;
     private URL userAgentStyleSheet = null;
 
     ProjectorFilter(Context context)
@@ -101,7 +101,7 @@ class ProjectorFilter extends XMLFilterImpl
         this(null, null, new HashMap(), context, null);
     }
 
-    ProjectorFilter(URL baseUrl, URL userAgentStyleSheet, Map userAgentParameters, Context context, CssResolver cssResolver)
+    ProjectorFilter(URL baseUrl, URL userAgentStyleSheet, Map<String, String> userAgentParameters, Context context, CssResolver cssResolver)
     {
         this.cssResolver = cssResolver != null
                 ? cssResolver
@@ -112,8 +112,6 @@ class ProjectorFilter extends XMLFilterImpl
                 : getClass().getResource("style/ua.css");
         this.userAgentParameters = userAgentParameters;
         this.context = context;
-        
-        context.pageRules = ruleSet.getPageRules();
     }
 
     private static void addFOMarker(Node parent, String name, String value)
@@ -124,6 +122,7 @@ class ProjectorFilter extends XMLFilterImpl
         parent.insertBefore(element, parent.getFirstChild());
     }
 
+    @SuppressWarnings("StringEquality")
     private Collection<Rule> appendStyleAttributeRules(Collection<Rule> matchingRules, Attributes atts, String namespaceURI) throws SAXException
     {
         if (Constants.XHTML != namespaceURI)
@@ -313,7 +312,7 @@ class ProjectorFilter extends XMLFilterImpl
         if (collectStyleSheet)
         {
             collectStyleSheet = false;
-            addStyleSheet(cssResolver.getRuleSet(baseUrl, embeddedStyleSheet), 0, true);
+            addStyleSheet(CssRuleSet.parse(baseUrl, embeddedStyleSheet, cssResolver), 0, true);
             embeddedStyleSheet = "";
         }
 
@@ -681,7 +680,7 @@ class ProjectorFilter extends XMLFilterImpl
                 }
             }
         } 
-        catch (Exception e)
+        catch (MalformedURLException | CSSException | SAXException e)
         {
             throw new SAXException(e);
         }
@@ -770,53 +769,40 @@ class ProjectorFilter extends XMLFilterImpl
      */
     private void installRegionAccumulator() throws SAXException
     {
-        Accumulator.postAccumulate(
-                this,
-                new Accumulator.ProcessElement()
-                {
-                    @Override
-                    public void process(org.w3c.dom.Element element, XMLFilter filter) throws SAXException
-                    {
-                        String pageName = element.getAttributeNS(Constants.CSS, "page");
-                        if (pageName.equals("") || pageName.equals("auto"))
-                        {
-                            pageName = "unnamed";
-                        }
-
-                        element.setAttributeNS(Constants.CSS, "css:page", pageName);
-
-                        Map<String, org.w3c.dom.Element> regionsForPage = context.regions.get(pageName);
-                        if (regionsForPage == null)
-                        {
-                            regionsForPage = new HashMap();
-                            context.regions.put(pageName, regionsForPage);
-                        }
-
-                        regionsForPage.put(element.getAttributeNS(Constants.CSS, "region"), element);
-                    }
-                }
-        );
+        Accumulator.postAccumulate(this, (org.w3c.dom.Element element, XMLFilter filter) ->
+        {
+            String pageName = element.getAttributeNS(Constants.CSS, "page");
+            if (pageName.equals("") || pageName.equals("auto"))
+            {
+                pageName = "unnamed";
+            }
+            
+            element.setAttributeNS(Constants.CSS, "css:page", pageName);
+            
+            Map<String, org.w3c.dom.Element> regionsForPage = context.regions.get(pageName);
+            if (regionsForPage == null)
+            {
+                regionsForPage = new HashMap();
+                context.regions.put(pageName, regionsForPage);
+            }
+            
+            regionsForPage.put(element.getAttributeNS(Constants.CSS, "region"), element);
+        });
     }
 
     private void installStringSetAccumulator(final String name, final String value, final Map scope) throws SAXException
     {
-        Accumulator.postAccumulate(
-                this,
-                new Accumulator.ProcessElement()
-                {
-                    public void process(org.w3c.dom.Element element, XMLFilter filter) throws SAXException
-                    {
-                        String result = MessageFormat.format(
-                                value,
-                                new Object[] { getElementContents(element.getFirstChild()) });
-
-                        scope.put(name, result);
-                        addFOMarker(element, name, result);
-
-                        DOMToContentHandler.elementToContentHandler(element, filter.getContentHandler());
-                    }
-                }
-        );
+        Accumulator.postAccumulate(this, (org.w3c.dom.Element element, XMLFilter filter) ->
+        {
+            String result = MessageFormat.format(
+                    value,
+                    new Object[] { getElementContents(element.getFirstChild()) });
+            
+            scope.put(name, result);
+            addFOMarker(element, name, result);
+            
+            DOMToContentHandler.elementToContentHandler(element, filter.getContentHandler());
+        });
     }
 
     private static boolean isMatchingStyleSheet(Attributes atts)
@@ -894,7 +880,7 @@ class ProjectorFilter extends XMLFilterImpl
                             : new URL(baseUrl, cssUri);
                     addStyleSheet(cssResolver.getRuleSet(cssUrl), 0, true);
                 } 
-                catch (Exception e)
+                catch (MalformedURLException | CSSException | SAXException e)
                 {
                     throw new SAXException(e);
                 }
@@ -918,14 +904,13 @@ class ProjectorFilter extends XMLFilterImpl
 
     private void reset()
     {
-        ruleSet.clear();
+        context.clear();
         matcher = null;
         collectStyleSheet = false;
         embeddedStyleSheet = "";
         elements.clear();
         counters.clear();
         namedStrings.clear();
-        context.regions.clear();
     }
 
     private void resetCounter(Property counterReset, boolean display)
@@ -1273,10 +1258,10 @@ class ProjectorFilter extends XMLFilterImpl
 
     private void addStyleSheet(CssRuleSet cssRuleSet, int offset, boolean resetMatcher) throws SAXException
     {
-        ruleSet.addRuleSet(cssRuleSet, offset);
+        context.ruleSet.addRuleSet(cssRuleSet, offset);
         if (resetMatcher)
         {
-            matcher = new Matcher(ruleSet.getCompiledRules());
+            matcher = new Matcher(context.ruleSet.getCompiledRules());
             repositionMatcher();
         }
     }
@@ -1417,7 +1402,7 @@ class ProjectorFilter extends XMLFilterImpl
         {
             addStyleSheet(CssRuleSet.parse("*{display: inline}"), -2, false);
 
-            String htmlHeaderMark = (String) userAgentParameters.get("html-header-mark");
+            String htmlHeaderMark = userAgentParameters.get("html-header-mark");
             if (htmlHeaderMark != null)
             {
                 addStyleSheet(CssRuleSet.parse(htmlHeaderMark + "{string-set: component contents}"), -2, false);
@@ -1425,7 +1410,7 @@ class ProjectorFilter extends XMLFilterImpl
 
             addStyleSheet(cssResolver.getRuleSet(userAgentStyleSheet), -1, true);
         } 
-        catch (Exception e)
+        catch (CSSException | SAXException e)
         {
             throw new SAXException(e);
         }

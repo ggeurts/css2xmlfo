@@ -8,6 +8,7 @@ import java.util.List;
  * Represents one CSS2 @page rule.
  *
  * @author Werner Donn\u00e9
+ * @author Gerke Geurts
  */
 public class CssPageRule
 {

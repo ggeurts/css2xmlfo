@@ -5,7 +5,8 @@ import org.w3c.css.sac.Selector;
 /**
  * Represents an atomic, fully compiled CSS rule.
  *
- * @author ggeurts
+ * @author Werner Donn\u00e9
+ * @author Gerke Geurts
  */
 public class Rule
 {

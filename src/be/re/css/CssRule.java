@@ -22,6 +22,7 @@ import org.w3c.css.sac.SiblingSelector;
  * Represents one CSS2 rule.
  *
  * @author Werner Donn\u00e9
+ * @author Gerke Geurts
  */
 public class CssRule
 {

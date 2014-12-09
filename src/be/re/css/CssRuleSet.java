@@ -19,7 +19,7 @@ import org.w3c.css.sac.Parser;
  * Collection of parsed rules, page rules and inclusions of other style sheets.
  * This collection is immutable after construction by a CssRuleSet.Builder 
  * instance.
- * @author ggeurts
+ * @author Gerke Geurts
  */
 public class CssRuleSet
 {
