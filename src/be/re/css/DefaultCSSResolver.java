@@ -28,25 +28,10 @@ public class DefaultCSSResolver implements CSSResolver
         CSSRuleSet result = cachedRules.get(styleSheetUrl);
         if (result != null) return result;
         
-        result = parseStyleSheet(styleSheetUrl);
-        return cachedRules.putIfAbsent(styleSheetUrl, result);
-    }
-    
-    private CSSRuleSet parseStyleSheet(URL styleSheetUrl) throws CSSException
-    {
-        try
-        {
-            InputSource source = new InputSource(styleSheetUrl.toString());
-            CSSRuleSet.Builder builder = new CSSRuleSet.Builder(styleSheetUrl, this);
-            CSSRuleCollector collector = new CSSRuleCollector(builder);
-            Parser parser = Util.getSacParser();
-            parser.setDocumentHandler(collector);
-            parser.parseStyleSheet(source);
-            return builder.getRuleSet();
-        }
-        catch (IOException e)
-        {
-            throw new CSSException(e);
-        }
+        result = CSSRuleSet.parse(styleSheetUrl, this);
+        CSSRuleSet previousResult = cachedRules.putIfAbsent(styleSheetUrl, result);
+        return previousResult == null 
+                ? result
+                : previousResult;
     }
 }

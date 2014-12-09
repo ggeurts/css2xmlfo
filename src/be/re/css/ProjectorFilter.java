@@ -137,7 +137,7 @@ class ProjectorFilter extends XMLFilterImpl
             return matchingRules;
         }
 
-        List<CSSRule> rules = CSSRule.parseStyle(style);
+        List<CSSRule> rules = CSSRule.parseStyle(style, baseUrl);
         List<Rule> result = new ArrayList<>(matchingRules.size() + rules.size());
         result.addAll(matchingRules);
         for (CSSRule cssRule : rules)

@@ -20,26 +20,21 @@ import org.w3c.css.sac.SelectorList;
  */
 class CSSRuleCollector implements DocumentHandler
 {
-    private final CSSRuleSet.Builder cssBuilder;
+    private final CSSRuleSetBuilder cssBuilder;
     private final Map prefixMap = new HashMap();
     private CSSPageRule currentPageRule = null;
     private final List<CSSRule> currentRules = new ArrayList<>();
     private boolean ignore = false;
 
-    CSSRuleCollector(CSSRuleSet.Builder cssBuilder)
+    CSSRuleCollector(CSSRuleSetBuilder cssBuilder, boolean forStyle)
     {
         this.cssBuilder = cssBuilder;
-        if (cssBuilder == null)
+        if (forStyle)
         {
             currentRules.add(new CSSRule());
         }
     }
 
-    public List<CSSRule> getRules()
-    {
-        return currentRules;
-    }
-    
     @Override
     public void comment(String text) throws CSSException
     {
@@ -139,7 +134,7 @@ class CSSRuleCollector implements DocumentHandler
         {
             Property[] properties = new Property(name.toLowerCase(), value, important, prefixMap, cssBuilder.getUrl()).split();
 
-            if (!currentRules.isEmpty())
+            if (currentPageRule == null)
             {
                 for (CSSRule rule : currentRules)
                 {
@@ -149,7 +144,7 @@ class CSSRuleCollector implements DocumentHandler
                     }
                 }
             } 
-            else if (currentPageRule != null)
+            else
             {
                 for (int i = 0; i < properties.length; ++i)
                 {

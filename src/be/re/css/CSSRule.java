@@ -2,6 +2,7 @@ package be.re.css;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import org.w3c.css.sac.AttributeCondition;
@@ -86,6 +87,7 @@ public class CSSRule
     /**
      * Returns the interned name of the element this rule applies to. If it
      * doesn't apply to an element <code>null</code> is returned.
+     * @return 
      */
     public String getElementName()
     {
@@ -135,6 +137,7 @@ public class CSSRule
     /**
      * Returns the interned pseudo element name or <code>null</code> if the rule
      * doesn't apply to a pseudo element.
+     * @return 
      */
     public String getPseudoElementName()
     {
@@ -171,6 +174,7 @@ public class CSSRule
 
     /**
      * Returns the selector that matches the rule.
+     * @return 
      */
     public Selector getSelector()
     {
@@ -261,19 +265,21 @@ public class CSSRule
     /**
      * Parses a CSS2 style declaration (without '{' and '}').
      * @param style The style declaration.
+     * @param baseUrl URL of document from which style declaration originates.
      * @return A rule set with the parsed CSS rules.
      * @throws CSSException 
      */
-    public static List<CSSRule> parseStyle(String style) throws CSSException
+    public static List<CSSRule> parseStyle(String style, URL baseUrl) throws CSSException
     {
         try
         {
             InputSource source = new InputSource(new StringReader(style));
-            CSSRuleCollector collector = new CSSRuleCollector(null);
+            Builder builder = new Builder(baseUrl);
+            CSSRuleCollector collector = new CSSRuleCollector(new Builder(baseUrl), true);
             Parser parser = Util.getSacParser();
             parser.setDocumentHandler(collector);
             parser.parseStyleDeclaration(source);
-            return collector.getRules();
+            return builder.getRules();
         }
         catch (IOException e)
         {
@@ -288,4 +294,43 @@ public class CSSRule
         private int names;
     } // Specificity
 
+    private static class Builder implements CSSRuleSetBuilder 
+    {
+        private final URL baseUrl;
+        private final List<CSSRule> rules = new ArrayList<>();
+        
+        public Builder(URL baseUrl)
+        {
+            this.baseUrl = baseUrl;
+        }
+
+        public List<CSSRule> getRules()
+        {
+            return rules;
+        }
+        
+        @Override
+        public URL getUrl()
+        {
+            return baseUrl;
+        }
+        
+        @Override
+        public void include(String uri) throws CSSException
+        {
+            // NOP
+        }
+        
+        @Override
+        public void addRule(CSSRule rule)
+        {
+            rules.add(rule);
+        }
+    
+        @Override
+        public void addPageRule(CSSPageRule pageRule)
+        {
+            // NOP
+        }
+    }
 } // Rule

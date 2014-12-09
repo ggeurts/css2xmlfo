@@ -106,7 +106,7 @@ public class CSSRuleSet
         {
             InputSource source = new InputSource(styleSheetUrl.toString());
             Builder builder = new CSSRuleSet.Builder(styleSheetUrl, cssResolver);
-            CSSRuleCollector collector = new CSSRuleCollector(builder);
+            CSSRuleCollector collector = new CSSRuleCollector(builder, false);
             Parser parser = Util.getSacParser();
             parser.setDocumentHandler(collector);
             parser.parseStyleSheet(source);
@@ -120,7 +120,8 @@ public class CSSRuleSet
 
     /**
      * Parses an embedded CSS2 style sheet.
-     * @param styleSheetUrl The URL of document that contains the embedded style sheet.
+     * @param baseUrl The URL of document that contains the embedded style sheet.
+     * @param styleSheet The embedded style sheet.
      * @param cssResolver The resolver to use to retrieve included style sheets.
      * @return A rule set with the parsed CSS rules.
      * @throws CSSException 
@@ -131,7 +132,7 @@ public class CSSRuleSet
         {
             InputSource source = new InputSource(new StringReader(styleSheet));
             Builder builder = new Builder(baseUrl, cssResolver);
-            CSSRuleCollector collector = new CSSRuleCollector(builder);
+            CSSRuleCollector collector = new CSSRuleCollector(builder, false);
             Parser parser = Util.getSacParser();
             parser.setDocumentHandler(collector);
             parser.parseStyleSheet(source);
@@ -145,8 +146,7 @@ public class CSSRuleSet
 
     /**
      * Parses an embedded CSS2 style sheet.
-     * @param styleSheetUrl The URL of document that contains the embedded style sheet.
-     * @param cssResolver The resolver to use to retrieve included style sheets.
+     * @param styleSheet The embedded style sheet.
      * @return A rule set with the parsed CSS rules.
      * @throws CSSException 
      */
@@ -156,7 +156,7 @@ public class CSSRuleSet
         {
             InputSource source = new InputSource(new StringReader(styleSheet));
             Builder builder = new Builder(null, null);
-            CSSRuleCollector collector = new CSSRuleCollector(builder);
+            CSSRuleCollector collector = new CSSRuleCollector(builder, false);
             Parser parser = Util.getSacParser();
             parser.setDocumentHandler(collector);
             parser.parseStyleSheet(source);
@@ -168,7 +168,7 @@ public class CSSRuleSet
         }
     }
     
-    public static class Builder 
+    private static class Builder implements CSSRuleSetBuilder 
     {
         CSSRuleSet ruleSet;
         CSSResolver resolver;
@@ -179,6 +179,7 @@ public class CSSRuleSet
             this.resolver = resolver;
         }
 
+        @Override
         public URL getUrl()
         {
             return ruleSet.url;
@@ -189,6 +190,7 @@ public class CSSRuleSet
             return ruleSet;
         }
 
+        @Override
         public void include(String uri) throws CSSException
         {
             if (resolver == null) return;
@@ -198,7 +200,10 @@ public class CSSRuleSet
                 URL cssUrl = ruleSet.url != null
                         ? new URL(ruleSet.url, uri)
                         : new URL(uri);
-                include(cssUrl);
+                if (!ruleSet.hasIncludeRecursive(cssUrl))
+                {
+                    ruleSet.includes.add(resolver.getRuleSet(cssUrl));
+                }
             }
             catch (MalformedURLException e)
             {
@@ -206,21 +211,13 @@ public class CSSRuleSet
             }
         }
         
-        public void include(URL cssUrl) throws CSSException
-        {
-            if (resolver == null) return;
-
-            if (cssUrl != null && !ruleSet.hasIncludeRecursive(cssUrl))
-            {
-                ruleSet.includes.add(resolver.getRuleSet(cssUrl));
-            }
-        }
-        
+        @Override
         public void addRule(CSSRule rule)
         {
             ruleSet.rules.add(rule);
         }
     
+        @Override
         public void addPageRule(CSSPageRule pageRule)
         {
             ruleSet.pageRules.add(pageRule);
