@@ -3,19 +3,21 @@ package be.re.css;
 import org.w3c.css.sac.Selector;
 
 /**
- * Represents an atomic, fully compiled CSS rule.
+ * Represents a fully processed CSS rule for the application of a single CSS property.
+ * Contrary to the {@link CSSRule} instances, instances of this class are only 
+ * applicable to the XML document that is currently being processed.
  *
  * @author Werner Donn\u00e9
  * @author Gerke Geurts
  */
 public class Rule
 {
-    private final CssRule cssRule;
+    private final CSSRule cssRule;
     private final Property property;
     private final int specificity;
     private final int position;
 
-    public Rule(CssRule cssRule, Property property, int position, int specificity)
+    public Rule(CSSRule cssRule, Property property, int position, int specificity)
     {
         this.cssRule = cssRule;
         this.property = property;

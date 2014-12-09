@@ -12,12 +12,12 @@ import org.w3c.css.sac.CSSException;
  * Interface for resolver of external CSS style sheets.
  * @author Gerke Geurts
  */
-public interface CssResolver
+public interface CSSResolver
 {
     /**
      * Retrieves and parses style sheet rules from a given CSS document URL.
      * @param styleSheetUrl The style sheet location.
      * @return The compiled rule set as retrieved from styleSheetUrl.
      */
-    CssRuleSet getRuleSet(URL styleSheetUrl) throws CSSException;
+    CSSRuleSet getRuleSet(URL styleSheetUrl) throws CSSException;
 }

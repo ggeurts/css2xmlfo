@@ -16,26 +16,25 @@ import org.w3c.css.sac.InputSource;
 import org.w3c.css.sac.Parser;
 
 /**
- * Collection of parsed rules, page rules and inclusions of other style sheets.
- * This collection is immutable after construction by a CssRuleSet.Builder 
- * instance.
+ * Collection of fully processed CSS2 rules, page rules and inclusions of other 
+ * style sheets.
  * @author Gerke Geurts
  */
-public class CssRuleSet
+public class CSSRuleSet
 {
     private final URL url;
-    private final List<CssRule> rules = new ArrayList<>();
-    private final List<CssPageRule> pageRules = new ArrayList<>();
-    private final List<CssRuleSet> includes = new ArrayList<>();
+    private final List<CSSRule> rules = new ArrayList<>();
+    private final List<CSSPageRule> pageRules = new ArrayList<>();
+    private final List<CSSRuleSet> includes = new ArrayList<>();
     private final int offset;
     
-    public CssRuleSet(URL url)
+    public CSSRuleSet(URL url)
     {
         this.url = url;
         this.offset = 0;
     }
 
-    public CssRuleSet(int offset)
+    public CSSRuleSet(int offset)
     {
         this.url = null;
         this.offset = offset;
@@ -51,30 +50,30 @@ public class CssRuleSet
         return offset;
     }
 
-    public List<CssRuleSet> getIncludes()
+    public List<CSSRuleSet> getIncludes()
     {
         return includes;
     }
 
-    public List<CssRuleSet> getIncludesRecursive()
+    public List<CSSRuleSet> getIncludesRecursive()
     {
-        List<CssRuleSet> result = new ArrayList<>();
+        List<CSSRuleSet> result = new ArrayList<>();
         addIncludesRecursive(result);
         return result;
     }
     
     public boolean hasIncludeRecursive(URL cssUrl)
     {
-        for (CssRuleSet include : includes)
+        for (CSSRuleSet include : includes)
         {
             if (cssUrl.equals(include.url) || include.hasIncludeRecursive(cssUrl)) return true;
         }
         return false;
     }
     
-    private void addIncludesRecursive(List<CssRuleSet> result)
+    private void addIncludesRecursive(List<CSSRuleSet> result)
     {
-        for (CssRuleSet include : includes)
+        for (CSSRuleSet include : includes)
         {
             if (!result.contains(include))
             {
@@ -84,12 +83,12 @@ public class CssRuleSet
         }
     }
 
-    public List<CssRule> getRules()
+    public List<CSSRule> getRules()
     {
         return rules;
     }
     
-    public List<CssPageRule> getPageRules()
+    public List<CSSPageRule> getPageRules()
     {
         return pageRules;
     }
@@ -101,13 +100,13 @@ public class CssRuleSet
      * @return A rule set with the parsed CSS rules.
      * @throws CSSException 
      */
-    public static CssRuleSet parse(URL styleSheetUrl, CssResolver cssResolver) throws CSSException
+    public static CSSRuleSet parse(URL styleSheetUrl, CSSResolver cssResolver) throws CSSException
     {
         try
         {
             InputSource source = new InputSource(styleSheetUrl.toString());
-            Builder builder = new CssRuleSet.Builder(styleSheetUrl, cssResolver);
-            CssRuleCollector collector = new CssRuleCollector(builder);
+            Builder builder = new CSSRuleSet.Builder(styleSheetUrl, cssResolver);
+            CSSRuleCollector collector = new CSSRuleCollector(builder);
             Parser parser = Util.getSacParser();
             parser.setDocumentHandler(collector);
             parser.parseStyleSheet(source);
@@ -126,13 +125,13 @@ public class CssRuleSet
      * @return A rule set with the parsed CSS rules.
      * @throws CSSException 
      */
-    public static CssRuleSet parse(URL baseUrl, String styleSheet, CssResolver cssResolver) throws CSSException
+    public static CSSRuleSet parse(URL baseUrl, String styleSheet, CSSResolver cssResolver) throws CSSException
     {
         try
         {
             InputSource source = new InputSource(new StringReader(styleSheet));
             Builder builder = new Builder(baseUrl, cssResolver);
-            CssRuleCollector collector = new CssRuleCollector(builder);
+            CSSRuleCollector collector = new CSSRuleCollector(builder);
             Parser parser = Util.getSacParser();
             parser.setDocumentHandler(collector);
             parser.parseStyleSheet(source);
@@ -151,13 +150,13 @@ public class CssRuleSet
      * @return A rule set with the parsed CSS rules.
      * @throws CSSException 
      */
-    public static CssRuleSet parse(String styleSheet) throws CSSException
+    public static CSSRuleSet parse(String styleSheet) throws CSSException
     {
         try
         {
             InputSource source = new InputSource(new StringReader(styleSheet));
             Builder builder = new Builder(null, null);
-            CssRuleCollector collector = new CssRuleCollector(builder);
+            CSSRuleCollector collector = new CSSRuleCollector(builder);
             Parser parser = Util.getSacParser();
             parser.setDocumentHandler(collector);
             parser.parseStyleSheet(source);
@@ -171,12 +170,12 @@ public class CssRuleSet
     
     public static class Builder 
     {
-        CssRuleSet ruleSet;
-        CssResolver resolver;
+        CSSRuleSet ruleSet;
+        CSSResolver resolver;
         
-        public Builder(URL url, CssResolver resolver)
+        public Builder(URL url, CSSResolver resolver)
         {
-            this.ruleSet = new CssRuleSet(url);
+            this.ruleSet = new CSSRuleSet(url);
             this.resolver = resolver;
         }
 
@@ -185,7 +184,7 @@ public class CssRuleSet
             return ruleSet.url;
         }
         
-        public CssRuleSet getRuleSet()
+        public CSSRuleSet getRuleSet()
         {
             return ruleSet;
         }
@@ -217,12 +216,12 @@ public class CssRuleSet
             }
         }
         
-        public void addRule(CssRule rule)
+        public void addRule(CSSRule rule)
         {
             ruleSet.rules.add(rule);
         }
     
-        public void addPageRule(CssPageRule pageRule)
+        public void addPageRule(CSSPageRule pageRule)
         {
             ruleSet.pageRules.add(pageRule);
         }

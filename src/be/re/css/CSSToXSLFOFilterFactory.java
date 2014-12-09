@@ -18,12 +18,13 @@ import javax.xml.transform.stream.StreamSource;
 import org.xml.sax.XMLReader;
 
 /**
- *
+ * A factory of {@link CSSToXSLFOFilter} instances. This factory caches resolved 
+ * style sheets, XSLT templates and other factories.
  * @author Gerke Geurts
  */
 public class CSSToXSLFOFilterFactory
 {
-    private final CssResolver cssResolver;
+    private final CSSResolver cssResolver;
     private final SAXTransformerFactory transformerFactory;
     private final Templates transformerTemplates;
     private boolean debug;
@@ -31,7 +32,7 @@ public class CSSToXSLFOFilterFactory
     @SuppressWarnings("OverridableMethodCallInConstructor")
     public CSSToXSLFOFilterFactory() throws CSSToXSLFOException
     {
-        cssResolver = new DefaultCssResolver();
+        cssResolver = new DefaultCSSResolver();
         
         try
         {
@@ -46,7 +47,7 @@ public class CSSToXSLFOFilterFactory
         }
     }
     
-    public CssResolver getCssResolver()
+    public CSSResolver getCssResolver()
     {
         return cssResolver;
     }

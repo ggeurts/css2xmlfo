@@ -19,12 +19,12 @@ import org.w3c.css.sac.Selector;
 import org.w3c.css.sac.SiblingSelector;
 
 /**
- * Represents one CSS2 rule.
+ * Represents one CSS2 rule with one or more {@link Property} instances.
  *
  * @author Werner Donn\u00e9
  * @author Gerke Geurts
  */
-public class CssRule
+public class CSSRule
 {
     private String elementName;
     private final List<Property> properties = new ArrayList<>();
@@ -36,14 +36,14 @@ public class CssRule
     /** 
      * Constructs a rule that represents a style attribute
      */
-    CssRule()
+    CSSRule()
     {
         this.selector = null;
         this.selectorChain = null;
         this.specificity = 10000;
     }
     
-    CssRule(Selector selector)
+    CSSRule(Selector selector)
     {
         this.selector = selector instanceof ElementSelector
                 ? new InternedElementSelector((ElementSelector) selector) 
@@ -69,7 +69,7 @@ public class CssRule
      * information. This makes it possible to match a set of rules resulting
      * after a split by picking only one of them.
      */
-    private CssRule(CssRule source)
+    private CSSRule(CSSRule source)
     {
         this.selector = source.selector;
         this.elementName = source.elementName;
@@ -264,12 +264,12 @@ public class CssRule
      * @return A rule set with the parsed CSS rules.
      * @throws CSSException 
      */
-    public static List<CssRule> parseStyle(String style) throws CSSException
+    public static List<CSSRule> parseStyle(String style) throws CSSException
     {
         try
         {
             InputSource source = new InputSource(new StringReader(style));
-            CssRuleCollector collector = new CssRuleCollector(null);
+            CSSRuleCollector collector = new CSSRuleCollector(null);
             Parser parser = Util.getSacParser();
             parser.setDocumentHandler(collector);
             parser.parseStyleDeclaration(source);

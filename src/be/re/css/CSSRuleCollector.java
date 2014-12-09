@@ -18,24 +18,24 @@ import org.w3c.css.sac.SelectorList;
  * @author Werner Donn\u00e9
  * @author Gerke Geurts
  */
-class CssRuleCollector implements DocumentHandler
+class CSSRuleCollector implements DocumentHandler
 {
-    private final CssRuleSet.Builder cssBuilder;
+    private final CSSRuleSet.Builder cssBuilder;
     private final Map prefixMap = new HashMap();
-    private CssPageRule currentPageRule = null;
-    private final List<CssRule> currentRules = new ArrayList<>();
+    private CSSPageRule currentPageRule = null;
+    private final List<CSSRule> currentRules = new ArrayList<>();
     private boolean ignore = false;
 
-    CssRuleCollector(CssRuleSet.Builder cssBuilder)
+    CSSRuleCollector(CSSRuleSet.Builder cssBuilder)
     {
         this.cssBuilder = cssBuilder;
         if (cssBuilder == null)
         {
-            currentRules.add(new CssRule());
+            currentRules.add(new CSSRule());
         }
     }
 
-    public List<CssRule> getRules()
+    public List<CSSRule> getRules()
     {
         return currentRules;
     }
@@ -77,7 +77,7 @@ class CssRuleCollector implements DocumentHandler
     {
         if (!ignore)
         {
-            for (CssRule rule : currentRules)
+            for (CSSRule rule : currentRules)
             {
                 if (!rule.getProperties().isEmpty())
                 {
@@ -141,7 +141,7 @@ class CssRuleCollector implements DocumentHandler
 
             if (!currentRules.isEmpty())
             {
-                for (CssRule rule : currentRules)
+                for (CSSRule rule : currentRules)
                 {
                     for (int j = 0; j < properties.length; ++j)
                     {
@@ -194,7 +194,7 @@ class CssRuleCollector implements DocumentHandler
     {
         if (!ignore)
         {
-            currentPageRule = new CssPageRule(
+            currentPageRule = new CSSPageRule(
                     name != null && pseudoPage != null
                             ? (pseudoPage + "-" + name)
                             : (name != null
@@ -213,7 +213,7 @@ class CssRuleCollector implements DocumentHandler
 
         for (int i = 0; i < selectors.getLength(); ++i)
         {
-            currentRules.add(new CssRule(selectors.item(i)));
+            currentRules.add(new CSSRule(selectors.item(i)));
         }
     }
 } // RuleCollector

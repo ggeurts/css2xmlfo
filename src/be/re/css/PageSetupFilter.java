@@ -29,6 +29,7 @@ import org.xml.sax.helpers.XMLFilterImpl;
  * outer tables.
  *
  * @author Werner Donn\u00e9
+ * @author Gerke Geurts
  */
 class PageSetupFilter extends XMLFilterImpl
 {
@@ -91,14 +92,14 @@ class PageSetupFilter extends XMLFilterImpl
         this.debug = debug;
     }
 
-    private static void addUnnamedPageRule(List<CssPageRule> pageRules)
+    private static void addUnnamedPageRule(List<CSSPageRule> pageRules)
     {
-        for (CssPageRule rule : pageRules)
+        for (CSSPageRule rule : pageRules)
         {
             if (rule.getName().equals("unnamed")) return;
         }
 
-        CssPageRule unnamedPageRule = new CssPageRule("unnamed");
+        CSSPageRule unnamedPageRule = new CSSPageRule("unnamed");
         unnamedPageRule.addProperty(new Property("size", "portrait", false, null));
         pageRules.add(0, unnamedPageRule);
     }
@@ -428,14 +429,14 @@ class PageSetupFilter extends XMLFilterImpl
      * successor overrides the values of its predecessors. This implements the
      * cascade.
      */
-    private Attributes getPageAttributes(Map<String, CssPageRule> pageRulesByName, String pageName, String[] names)
+    private Attributes getPageAttributes(Map<String, CSSPageRule> pageRulesByName, String pageName, String[] names)
     {
         AttributesImpl result = new AttributesImpl();
         result.addAttribute(Constants.CSS, "name", "css:name", "CDATA", pageName);
 
         for (int i = 0; i < names.length; ++i)
         {
-            CssPageRule pageRule = pageRulesByName.get(names[i]);
+            CSSPageRule pageRule = pageRulesByName.get(names[i]);
             if (pageRule != null)
             {
                 for (Property p : pageRule.getProperties())
@@ -453,11 +454,11 @@ class PageSetupFilter extends XMLFilterImpl
      * last, left, right, blank and any variants, which go in the repeatable
      * page masters. Only the most precise page names remain.
      */
-    private static Collection<String> getPageRuleNames(Iterable<CssPageRule> rules)
+    private static Collection<String> getPageRuleNames(Iterable<CSSPageRule> rules)
     {
         Set<String> result = new HashSet<>();
 
-        for (CssPageRule rule : rules)
+        for (CSSPageRule rule : rules)
         {
             String stripped = stripPseudoPrefix(rule.getName());
             if (!isPseudoPageName(rule.getName()))
@@ -539,11 +540,11 @@ class PageSetupFilter extends XMLFilterImpl
 
     private void applyPageRules() throws SAXException
     {
-        List<CssPageRule> pageRules = context.ruleSet.getPageRules();
+        List<CSSPageRule> pageRules = context.ruleSet.getPageRules();
         if (pageRules.isEmpty()) return;
 
         addUnnamedPageRule(pageRules);
-        Map<String, CssPageRule> pageRulesByName = recomposePageRules(sortPageRules(pageRules));
+        Map<String, CSSPageRule> pageRulesByName = recomposePageRules(sortPageRules(pageRules));
 
         super.startElement(Constants.CSS, "pages", "css:pages", new AttributesImpl());
 
@@ -565,16 +566,16 @@ class PageSetupFilter extends XMLFilterImpl
     /**
      * This performs the cascade.
      */
-    private static Map<String, CssPageRule> recomposePageRules(Iterable<CssPageRule> pageRules)
+    private static Map<String, CSSPageRule> recomposePageRules(Iterable<CSSPageRule> pageRules)
     {
-        Map<String, CssPageRule> result = new HashMap();
+        Map<String, CSSPageRule> result = new HashMap();
 
-        for (CssPageRule pageRule : pageRules)
+        for (CSSPageRule pageRule : pageRules)
         {
-            CssPageRule resultPageRule = result.get(pageRule.getName());
+            CSSPageRule resultPageRule = result.get(pageRule.getName());
             if (resultPageRule == null)
             {
-                resultPageRule = new CssPageRule(pageRule.getName());
+                resultPageRule = new CSSPageRule(pageRule.getName());
                 result.put(pageRule.getName(), resultPageRule);
             }
 
@@ -587,9 +588,9 @@ class PageSetupFilter extends XMLFilterImpl
         return result;
     }
 
-    private static List<CssPageRule> sortPageRules(List<CssPageRule> pageRules)
+    private static List<CSSPageRule> sortPageRules(List<CSSPageRule> pageRules)
     {
-        Comparator<CssPageRule> ruleComparator = (CssPageRule rule1, CssPageRule rule2) ->
+        Comparator<CSSPageRule> ruleComparator = (CSSPageRule rule1, CSSPageRule rule2) ->
         {
             String name1 = rule1.getName();
             String name2 = rule2.getName();
@@ -623,7 +624,7 @@ class PageSetupFilter extends XMLFilterImpl
             return result1;
         };
 
-        List<CssPageRule> result = new ArrayList<>(pageRules);
+        List<CSSPageRule> result = new ArrayList<>(pageRules);
         result.sort(ruleComparator);
         return result;
     }

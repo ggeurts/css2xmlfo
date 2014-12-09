@@ -10,12 +10,12 @@ import java.util.List;
  * @author Werner Donn\u00e9
  * @author Gerke Geurts
  */
-public class CssPageRule
+public class CSSPageRule
 {
     private final List<Property> properties = new ArrayList<>();
     private final String name;
 
-    CssPageRule(String name)
+    CSSPageRule(String name)
     {
         this.name = name;
     }

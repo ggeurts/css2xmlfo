@@ -15,7 +15,7 @@ import java.util.List;
 public class RuleSet
 {
     private Compiled compiled = new Compiled();
-    private final List<CssPageRule> pageRules = new ArrayList<>();
+    private final List<CSSPageRule> pageRules = new ArrayList<>();
     private int position = 0;
     private boolean isStale;
     
@@ -29,7 +29,7 @@ public class RuleSet
         return compiled;
     }
     
-    public List<CssPageRule> getPageRules()
+    public List<CSSPageRule> getPageRules()
     {
         return pageRules;
     }
@@ -39,25 +39,25 @@ public class RuleSet
      * specificity up or down, which is needed to account for the style sheet
      * source.
      */
-    public void addRuleSet(CssRuleSet ruleSet, int offset)
+    public void addRuleSet(CSSRuleSet ruleSet, int offset)
     {
-        for (CssRuleSet include : ruleSet.getIncludesRecursive())
+        for (CSSRuleSet include : ruleSet.getIncludesRecursive())
         {
             addRuleSetCore(include, offset);
         }
         addRuleSetCore(ruleSet, offset);
     }
 
-    private void addRuleSetCore(CssRuleSet cssRuleSet, int offset)
+    private void addRuleSetCore(CSSRuleSet cssRuleSet, int offset)
     {
-        for (CssRule rule : cssRuleSet.getRules())
+        for (CSSRule rule : cssRuleSet.getRules())
         {
             addRule(rule, offset);
         }
         pageRules.addAll(cssRuleSet.getPageRules());
     }
 
-    public void addRule(CssRule cssRule, int offset)
+    public void addRule(CSSRule cssRule, int offset)
     {
         for (Property p : cssRule.getProperties())
         {

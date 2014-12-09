@@ -28,20 +28,20 @@ import org.xml.sax.helpers.XMLFilterImpl;
 /**
  * This class implements the CSS cascading mechanism. It projects the CSS
  * properties onto the elements in the source document according to the CSS
- * stylesheet. They are represented as attributes in a distinct namespace. An
- * external stylesheet can be specified with the processing instruction which is
+ * style sheet. They are represented as attributes in a distinct namespace. An
+ * external style sheet can be specified with the processing instruction which is
  * proposed in section 2.2 of the CSS2 specification.
  *
  * Only properties from the "all" and "print" media are considered, besides the
  * media-neutral ones.
  *
  * The filter works for any XML vocabulary, but special measures have been taken
- * for the XHTML namespace. The style attribute, for example, is recognised and
- * applied. The XHTML methods of specifying stylesheets, such as the link and
+ * for the XHTML namespace. The style attribute, for example, is recognized and
+ * applied. The XHTML methods of specifying style sheets, such as the link and
  * style elements, are also honored.
  *
  * All shorthand properties are split into their constituting parts. This makes
- * it easier to write an XSLT stylesheet which transforms the result of this
+ * it easier to write an XSLT style sheet which transforms the result of this
  * class into XSL-FO.
  *
  * @author Werner Donn\u00e9
@@ -82,7 +82,7 @@ class ProjectorFilter extends XMLFilterImpl
     };
 
 
-    private final CssResolver cssResolver;
+    private final CSSResolver cssResolver;
     private final Context context;
     private URL baseUrl = null;
     private boolean collectStyleSheet = false;
@@ -101,11 +101,11 @@ class ProjectorFilter extends XMLFilterImpl
         this(null, null, new HashMap(), context, null);
     }
 
-    ProjectorFilter(URL baseUrl, URL userAgentStyleSheet, Map<String, String> userAgentParameters, Context context, CssResolver cssResolver)
+    ProjectorFilter(URL baseUrl, URL userAgentStyleSheet, Map<String, String> userAgentParameters, Context context, CSSResolver cssResolver)
     {
         this.cssResolver = cssResolver != null
                 ? cssResolver
-                : new DefaultCssResolver();
+                : new DefaultCSSResolver();
         this.baseUrl = baseUrl;
         this.userAgentStyleSheet = userAgentStyleSheet != null
                 ? userAgentStyleSheet 
@@ -137,10 +137,10 @@ class ProjectorFilter extends XMLFilterImpl
             return matchingRules;
         }
 
-        List<CssRule> rules = CssRule.parseStyle(style);
+        List<CSSRule> rules = CSSRule.parseStyle(style);
         List<Rule> result = new ArrayList<>(matchingRules.size() + rules.size());
         result.addAll(matchingRules);
-        for (CssRule cssRule : rules)
+        for (CSSRule cssRule : rules)
         {
             for (Property p : cssRule.getProperties())
             {
@@ -312,7 +312,7 @@ class ProjectorFilter extends XMLFilterImpl
         if (collectStyleSheet)
         {
             collectStyleSheet = false;
-            addStyleSheet(CssRuleSet.parse(baseUrl, embeddedStyleSheet, cssResolver), 0, true);
+            addStyleSheet(CSSRuleSet.parse(baseUrl, embeddedStyleSheet, cssResolver), 0, true);
             embeddedStyleSheet = "";
         }
 
@@ -1256,7 +1256,7 @@ class ProjectorFilter extends XMLFilterImpl
         return result;
     }
 
-    private void addStyleSheet(CssRuleSet cssRuleSet, int offset, boolean resetMatcher) throws SAXException
+    private void addStyleSheet(CSSRuleSet cssRuleSet, int offset, boolean resetMatcher) throws SAXException
     {
         context.ruleSet.addRuleSet(cssRuleSet, offset);
         if (resetMatcher)
@@ -1400,12 +1400,12 @@ class ProjectorFilter extends XMLFilterImpl
 
         try
         {
-            addStyleSheet(CssRuleSet.parse("*{display: inline}"), -2, false);
+            addStyleSheet(CSSRuleSet.parse("*{display: inline}"), -2, false);
 
             String htmlHeaderMark = userAgentParameters.get("html-header-mark");
             if (htmlHeaderMark != null)
             {
-                addStyleSheet(CssRuleSet.parse(htmlHeaderMark + "{string-set: component contents}"), -2, false);
+                addStyleSheet(CSSRuleSet.parse(htmlHeaderMark + "{string-set: component contents}"), -2, false);
             }
 
             addStyleSheet(cssResolver.getRuleSet(userAgentStyleSheet), -1, true);
