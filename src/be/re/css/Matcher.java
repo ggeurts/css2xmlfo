@@ -370,9 +370,7 @@ public class Matcher implements ContentHandler
         stepOneEvent(
                 state,
                 element,
-                ("".equals(element.namespaceURI) ? "*" : element.namespaceURI) + "|"
-                + element.localName
-        );
+                ("".equals(element.namespaceURI) ? "*" : element.namespaceURI) + "|" + element.localName);
 
         if (!"".equals(element.namespaceURI))
         {

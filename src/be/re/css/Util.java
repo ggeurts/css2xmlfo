@@ -482,15 +482,18 @@ class Util
 
     static String lexicalUnitAtom(LexicalUnit unit, URL baseUrl)
     {
-        return lexicalUnitAtom(unit, false, baseUrl);
+        StringBuilder sb = new StringBuilder();
+        lexicalUnitAtom(sb, unit, false, baseUrl);
+        return sb.toString();
     }
 
-    private static String lexicalUnitAtom(LexicalUnit unit, boolean identifiersToLower, URL baseUrl)
+    private static void lexicalUnitAtom(StringBuilder sb, LexicalUnit unit, boolean identifiersToLower, URL baseUrl)
     {
         switch (unit.getLexicalUnitType())
         {
             case LexicalUnit.SAC_ATTR:
-                return "attr(" + unit.getStringValue().toLowerCase() + ")";
+                sb.append("attr(").append(unit.getStringValue().toLowerCase()).append(')');
+                return;
 
             case LexicalUnit.SAC_CENTIMETER:
             case LexicalUnit.SAC_DEGREE:
@@ -508,93 +511,117 @@ class Util
             case LexicalUnit.SAC_PIXEL:
             case LexicalUnit.SAC_POINT:
             case LexicalUnit.SAC_RADIAN:
-                return (convertFloat(unit.getFloatValue()) + unit.getDimensionUnitText()).
-                        toLowerCase();
+                sb.append(convertFloat(unit.getFloatValue())).append(unit.getDimensionUnitText().toLowerCase());
+                return;
 
             // Flute 1.3 work-around, should be in previous list.
             case LexicalUnit.SAC_REAL:
-                return convertFloat(unit.getFloatValue());
+                sb.append(convertFloat(unit.getFloatValue()));
+                return;
 
             case LexicalUnit.SAC_COUNTER_FUNCTION:
             case LexicalUnit.SAC_COUNTERS_FUNCTION:
             case LexicalUnit.SAC_FUNCTION:
             case LexicalUnit.SAC_RECT_FUNCTION:
-                return unit.getFunctionName().toLowerCase() + "("
-                        + (unit.getParameters() != null
-                                ? lexicalUnitChain(
-                                        unit.getParameters(),
-                                        identifiersToLower,
-                                        baseUrl
-                                ) : "") + ")";
+                sb.append(unit.getFunctionName().toLowerCase()).append('(');
+                if (unit.getParameters() != null)
+                {
+                    lexicalUnitChain(sb, unit.getParameters(), identifiersToLower, baseUrl);
+                }
+                sb.append(')');
+                return;
 
             case LexicalUnit.SAC_IDENT:
-                return identifiersToLower
-                        ? unit.getStringValue().toLowerCase() : unit.getStringValue();
+                sb.append(identifiersToLower 
+                        ? unit.getStringValue().toLowerCase() 
+                        : unit.getStringValue());
+                return;
 
             case LexicalUnit.SAC_INHERIT:
-                return "inherit";
+                sb.append("inherit");
+                return;
 
             case LexicalUnit.SAC_INTEGER:
-                return String.valueOf(unit.getIntegerValue());
+                sb.append(unit.getIntegerValue());
+                return;
 
             case LexicalUnit.SAC_OPERATOR_COMMA:
-                return ",";
+                sb.append(',');
+                return;
 
             case LexicalUnit.SAC_OPERATOR_EXP:
-                return "^";
+                sb.append('^');
+                return;
 
             case LexicalUnit.SAC_OPERATOR_GE:
-                return ">=";
+                sb.append(">=");
+                return;
 
             case LexicalUnit.SAC_OPERATOR_GT:
-                return ">";
+                sb.append('>');
+                return;
 
             case LexicalUnit.SAC_OPERATOR_LE:
-                return "<=";
+                sb.append("<=");
+                return;
 
             case LexicalUnit.SAC_OPERATOR_LT:
-                return "<";
+                sb.append('<');
+                return;
 
             case LexicalUnit.SAC_OPERATOR_MINUS:
-                return "-";
+                sb.append('-');
+                return;
 
             case LexicalUnit.SAC_OPERATOR_MOD:
-                return "%";
+                sb.append('%');
+                return;
 
             case LexicalUnit.SAC_OPERATOR_MULTIPLY:
-                return "*";
+                sb.append('*');
+                return;
 
             case LexicalUnit.SAC_OPERATOR_PLUS:
-                return "+";
+                sb.append('+');
+                return;
 
             case LexicalUnit.SAC_OPERATOR_SLASH:
-                return "/";
+                sb.append('/');
+                return;
 
             case LexicalUnit.SAC_OPERATOR_TILDE:
-                return "~";
+                sb.append('~');
+                return;
 
             case LexicalUnit.SAC_RGBCOLOR:
-                return "rgb("
-                        + lexicalUnitChain(unit.getParameters(), identifiersToLower, baseUrl)
-                        + ")";
+                sb.append("rgb(");
+                lexicalUnitChain(sb, unit.getParameters(), identifiersToLower, baseUrl);
+                sb.append(')');
+                return;
 
             case LexicalUnit.SAC_STRING_VALUE:
-                return unit.getStringValue();
+                sb.append(unit.getStringValue());
+                return;
 
             case LexicalUnit.SAC_URI:
-                try
+                sb.append("url(");
+                if (baseUrl != null)
                 {
-                    return "url("
-                            + (baseUrl != null
-                                    ? new URL(baseUrl, unit.getStringValue()).toString()
-                                    : unit.getStringValue()) + ")";
-                } catch (MalformedURLException e)
-                {
-                    throw new RuntimeException(e);
+                    try
+                    {
+                        sb.append(new URL(baseUrl, unit.getStringValue()).toString());
+                    } 
+                    catch (MalformedURLException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
                 }
-
-            default:
-                return "";
+                else
+                {
+                    sb.append(unit.getStringValue());
+                }
+                sb.append(')');
+                return;
         }
     }
 
@@ -630,17 +657,21 @@ class Util
         return lexicalUnitAtoms(unit, true, baseUrl);
     }
 
-    private static String lexicalUnitChain(LexicalUnit unit, boolean identifiersToLower, URL baseUrl)
+    private static void lexicalUnitChain(StringBuilder sb, LexicalUnit unit, boolean identifiersToLower, URL baseUrl)
     {
-        return lexicalUnitAtom(unit, identifiersToLower, baseUrl)
-                + (unit.getNextLexicalUnit() != null
-                        ? (" " + lexicalUnitChain(unit.getNextLexicalUnit(), identifiersToLower, baseUrl)) 
-                        : "");
+        lexicalUnitAtom(sb, unit, identifiersToLower, baseUrl);
+        if (unit.getNextLexicalUnit() != null)
+        {
+            sb.append(' ');
+            lexicalUnitChain(sb, unit.getNextLexicalUnit(), identifiersToLower, baseUrl);
+        }
     }
 
     static String lexicalUnitToString(LexicalUnit unit, boolean identifiersToLower, URL baseUrl)
     {
-        return lexicalUnitChain(unit, identifiersToLower, baseUrl);
+        StringBuilder sb = new StringBuilder();
+        lexicalUnitChain(sb, unit, identifiersToLower, baseUrl);
+        return sb.toString();
     }
 
     /**
