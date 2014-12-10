@@ -588,40 +588,44 @@ class PageSetupFilter extends XMLFilterImpl
         return result;
     }
 
-    private static List<CSSPageRule> sortPageRules(List<CSSPageRule> pageRules)
+    private static List<CSSPageRule> sortPageRules(final List<CSSPageRule> pageRules)
     {
-        Comparator<CSSPageRule> ruleComparator = (CSSPageRule rule1, CSSPageRule rule2) ->
+        Comparator<CSSPageRule> ruleComparator = new Comparator<CSSPageRule>()
         {
-            String name1 = rule1.getName();
-            String name2 = rule2.getName();
-            int result1 = !"unnamed".equals(name1) && "unnamed".equals(name2)
-                    ? 1
-                    : ("unnamed".equals(name1) && !"unnamed".equals(name2) ? -1 : 0);
-            if (result1 == 0)
+            @Override
+            public int compare(CSSPageRule rule1, CSSPageRule rule2)
             {
-                result1 = "first".equals(name1) && !"first".equals(name2)
-                        ? 1 : (!"first".equals(name1) && "first".equals(name2) ? -1 : 0);
+                String name1 = rule1.getName();
+                String name2 = rule2.getName();
+                int result1 = !"unnamed".equals(name1) && "unnamed".equals(name2)
+                        ? 1
+                        : ("unnamed".equals(name1) && !"unnamed".equals(name2) ? -1 : 0);
+                if (result1 == 0)
+                {
+                    result1 = "first".equals(name1) && !"first".equals(name2)
+                            ? 1 : (!"first".equals(name1) && "first".equals(name2) ? -1 : 0);
+                }
+                if (result1 == 0)
+                {
+                    result1 = "last".equals(name1) && !"last".equals(name2)
+                            ? 1 : (!"last".equals(name1) && "last".equals(name2) ? -1 : 0);
+                }
+                if (result1 == 0)
+                {
+                    result1 = "left".equals(name1) && !"left".equals(name2)
+                            ? 1 : (!"left".equals(name1) && "left".equals(name2) ? -1 : 0);
+                }
+                if (result1 == 0)
+                {
+                    result1 = "right".equals(name1) && !"right".equals(name2)
+                            ? 1 : (!"right".equals(name1) && "right".equals(name2) ? -1 : 0);
+                }
+                if (result1 == 0)
+                {
+                    result1 = pageRules.indexOf(rule1) - pageRules.indexOf(rule2);
+                }
+                return result1;
             }
-            if (result1 == 0)
-            {
-                result1 = "last".equals(name1) && !"last".equals(name2)
-                        ? 1 : (!"last".equals(name1) && "last".equals(name2) ? -1 : 0);
-            }
-            if (result1 == 0)
-            {
-                result1 = "left".equals(name1) && !"left".equals(name2)
-                        ? 1 : (!"left".equals(name1) && "left".equals(name2) ? -1 : 0);
-            }
-            if (result1 == 0)
-            {
-                result1 = "right".equals(name1) && !"right".equals(name2)
-                        ? 1 : (!"right".equals(name1) && "right".equals(name2) ? -1 : 0);
-            }
-            if (result1 == 0)
-            {
-                result1 = pageRules.indexOf(rule1) - pageRules.indexOf(rule2);
-            }
-            return result1;
         };
 
         List<CSSPageRule> result = new ArrayList<>(pageRules);
@@ -705,10 +709,14 @@ class PageSetupFilter extends XMLFilterImpl
 
     private static Collection sortExtents(Collection extents)
     {
-        Collection result = new TreeSet((Object o1, Object o2) ->
+        Collection result = new TreeSet(new Comparator()
         {
-            return Util.indexOf(extentOrder, ((Node) o1).getLocalName())
-                    - Util.indexOf(extentOrder, ((Node) o2).getLocalName());
+            @Override
+            public int compare(Object o1, Object o2)
+            {
+                return Util.indexOf(extentOrder, ((Node) o1).getLocalName())
+                        - Util.indexOf(extentOrder, ((Node) o2).getLocalName());
+            }
         });
 
         result.addAll(extents);

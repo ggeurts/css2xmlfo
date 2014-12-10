@@ -2,6 +2,7 @@ package be.re.css;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -199,7 +200,7 @@ public class Compiled implements Cloneable
             out.println();
             out.println("DFA START");
             out.println();
-            dumpDFA(startState, new HashSet<>(), out);
+            dumpDFA(startState, new HashSet<Integer>(), out);
             out.println("DFA END");
             out.println();
             out.flush();
@@ -255,7 +256,7 @@ public class Compiled implements Cloneable
             out.println();
             out.println("NFA START");
             out.println();
-            dumpNFA(nfa[START_STATE], new HashSet<>(), out);
+            dumpNFA(nfa[START_STATE], new HashSet<Integer>(), out);
             out.println("NFA END");
             out.println();
             out.flush();
@@ -328,7 +329,14 @@ public class Compiled implements Cloneable
     private DFAState generateDFA(NFAState[] nfa)
     {
         // Sorting of the NFA states makes the labels unique.
-        SortedSet<NFAState> set = new TreeSet<>((NFAState o1, NFAState o2) -> o1.state - o2.state);
+        SortedSet<NFAState> set = new TreeSet<>(new Comparator<NFAState>()
+        {
+            @Override
+            public int compare(NFAState o1, NFAState o2)
+            {
+                return o1.state - o2.state;
+            }
+        });
         Map<String, DFAState> states = new HashMap<>();
 
         set.add(nfa[START_STATE]);

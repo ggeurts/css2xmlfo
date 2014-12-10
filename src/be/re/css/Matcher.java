@@ -170,8 +170,14 @@ public class Matcher implements ContentHandler
 
     private static boolean checkOneOfAttributeCondition(Element e, AttributeCondition c)
     {
-        return checkAttributeCondition(e, c, 
-                (Attributes atts, int i, AttributeCondition c1) -> hasToken(atts.getValue(i), c1.getValue()));
+        return checkAttributeCondition(e, c, new TestAttribute()
+        {
+            @Override
+            public boolean test(Attributes atts, int i, AttributeCondition c1)
+            {
+                return hasToken(atts.getValue(i), c1.getValue());
+            }
+        });
     }
 
     private static boolean checkPositionalCondition(Element e, int position)

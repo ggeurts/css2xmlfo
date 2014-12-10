@@ -5,8 +5,10 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import javax.xml.transform.Source;
 import javax.xml.transform.Templates;
 import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.URIResolver;
 import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.stream.StreamSource;
 import org.xml.sax.ContentHandler;
@@ -116,18 +118,22 @@ public class CSSToXSLFOFilter extends XMLFilterImpl
         {
             factory = be.re.xml.sax.Util.newSAXTransformerFactory();
 
-            factory.setURIResolver((String href, String base) ->
+            factory.setURIResolver(new URIResolver()
             {
-                try
+                @Override
+                public Source resolve(String href, String base)
                 {
-                    URL xslUrl = base != null && be.re.net.Util.isUrl(base)
-                            ? new URL(new URL(base), href)
-                            : new URL(CSSToXSLFOFilter.class.getResource("style/css.xsl"), href);
-                    return new StreamSource(xslUrl.openStream());
-                } 
-                catch (Exception e)
-                {
-                    return null;
+                    try
+                    {
+                        URL xslUrl = base != null && be.re.net.Util.isUrl(base)
+                                ? new URL(new URL(base), href)
+                                : new URL(CSSToXSLFOFilter.class.getResource("style/css.xsl"), href);
+                        return new StreamSource(xslUrl.openStream());
+                    }
+                    catch (Exception e)
+                    {
+                        return null;
+                    }
                 }
             });
 

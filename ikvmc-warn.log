@@ -1,0 +1,242 @@
+-nowarn:100:org.apache.log.format.ExtendedPatternFormatter
+-nowarn:100:org.apache.log.LogTarget
+-nowarn:100:org.w3c.dom.smil.ElementTimeControl
+-nowarn:100:org.w3c.dom.svg.SVGNumber
+-nowarn:100:org.w3c.dom.svg.SVGColor
+-nowarn:100:org.w3c.dom.smil.TimeEvent
+-nowarn:100:org.w3c.dom.svg.SVGElement
+-nowarn:100:org.w3c.dom.svg.SVGDocument
+-nowarn:100:org.w3c.dom.svg.SVGLength
+-nowarn:100:org.w3c.dom.svg.SVGAnimatedLength
+-nowarn:100:org.w3c.dom.svg.SVGLengthList
+-nowarn:100:org.w3c.dom.svg.SVGMatrix
+-nowarn:100:org.w3c.dom.svg.SVGPathSeg
+-nowarn:100:org.w3c.dom.svg.SVGPathSegList
+-nowarn:100:org.w3c.dom.svg.SVGNumberList
+-nowarn:100:org.w3c.dom.svg.SVGPoint
+-nowarn:100:org.w3c.dom.svg.SVGPointList
+-nowarn:100:org.w3c.dom.svg.SVGPreserveAspectRatio
+-nowarn:100:org.w3c.dom.svg.SVGTransform
+-nowarn:100:org.w3c.dom.svg.SVGTransformList
+-nowarn:100:org.w3c.dom.svg.SVGRect
+-nowarn:100:org.w3c.dom.svg.SVGAngle
+-nowarn:100:org.w3c.dom.svg.SVGAnimatedBoolean
+-nowarn:100:org.w3c.dom.svg.SVGAnimatedEnumeration
+-nowarn:100:org.w3c.dom.svg.SVGAnimatedInteger
+-nowarn:100:org.w3c.dom.svg.SVGAnimatedLengthList
+-nowarn:100:org.w3c.dom.svg.SVGAnimatedAngle
+-nowarn:100:org.w3c.dom.svg.SVGAnimatedNumber
+-nowarn:100:org.w3c.dom.svg.SVGAnimatedNumberList
+-nowarn:100:org.w3c.dom.svg.SVGAnimatedPathData
+-nowarn:100:org.w3c.dom.svg.SVGAnimatedPoints
+-nowarn:100:org.w3c.dom.svg.SVGAnimatedPreserveAspectRatio
+-nowarn:100:org.w3c.dom.svg.SVGAnimatedRect
+-nowarn:100:org.w3c.dom.svg.SVGAnimatedString
+-nowarn:100:org.w3c.dom.svg.SVGAnimatedTransformList
+-nowarn:100:org.w3c.dom.svg.SVGEvent
+-nowarn:100:org.w3c.dom.svg.SVGException
+-nowarn:100:org.w3c.dom.svg.SVGPathSegClosePath
+-nowarn:100:org.w3c.dom.svg.SVGPathSegCurvetoCubicAbs
+-nowarn:100:org.w3c.dom.svg.SVGPathSegCurvetoCubicRel
+-nowarn:100:org.w3c.dom.svg.SVGPathSegCurvetoQuadraticAbs
+-nowarn:100:org.w3c.dom.svg.SVGPathSegCurvetoQuadraticRel
+-nowarn:100:org.w3c.dom.svg.SVGPathSegCurvetoCubicSmoothAbs
+-nowarn:100:org.w3c.dom.svg.SVGPathSegCurvetoCubicSmoothRel
+-nowarn:100:org.w3c.dom.svg.SVGPathSegCurvetoQuadraticSmoothAbs
+-nowarn:100:org.w3c.dom.svg.SVGPathSegCurvetoQuadraticSmoothRel
+-nowarn:100:org.w3c.dom.svg.SVGPathSegArcAbs
+-nowarn:100:org.w3c.dom.svg.SVGPathSegArcRel
+-nowarn:100:org.w3c.dom.svg.SVGPathSegMovetoAbs
+-nowarn:100:org.w3c.dom.svg.SVGPathSegMovetoRel
+-nowarn:100:org.w3c.dom.svg.SVGPathSegLinetoAbs
+-nowarn:100:org.w3c.dom.svg.SVGPathSegLinetoRel
+-nowarn:100:org.w3c.dom.svg.SVGPathSegLinetoHorizontalAbs
+-nowarn:100:org.w3c.dom.svg.SVGPathSegLinetoHorizontalRel
+-nowarn:100:org.w3c.dom.svg.SVGPathSegLinetoVerticalAbs
+-nowarn:100:org.w3c.dom.svg.SVGPathSegLinetoVerticalRel
+-nowarn:100:org.mozilla.javascript.SecurityController
+-nowarn:100:org.mozilla.javascript.WrapFactory
+-nowarn:100:org.mozilla.javascript.ContextAction
+-nowarn:100:org.mozilla.javascript.Function
+-nowarn:100:org.mozilla.javascript.NativeJavaObject
+-nowarn:100:org.mozilla.javascript.GeneratedClassLoader
+-nowarn:100:org.mozilla.javascript.ClassShutter
+-nowarn:100:org.mozilla.javascript.ContextFactory
+-nowarn:100:org.mozilla.javascript.ImporterTopLevel
+-nowarn:109:org.w3c.dom.events.DocumentEvent:IKVM.OpenJDK.XML.API, Version=7.4.5196.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58
+-nowarn:109:org.w3c.dom.events.Event:IKVM.OpenJDK.XML.API, Version=7.4.5196.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58
+-nowarn:109:org.w3c.dom.events.EventException:IKVM.OpenJDK.XML.API, Version=7.4.5196.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58
+-nowarn:109:org.w3c.dom.events.EventListener:IKVM.OpenJDK.XML.API, Version=7.4.5196.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58
+-nowarn:109:org.w3c.dom.events.EventTarget:IKVM.OpenJDK.XML.API, Version=7.4.5196.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58
+-nowarn:109:org.w3c.dom.events.MouseEvent:IKVM.OpenJDK.XML.API, Version=7.4.5196.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58
+-nowarn:109:org.w3c.dom.events.MutationEvent:IKVM.OpenJDK.XML.API, Version=7.4.5196.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58
+-nowarn:109:org.w3c.dom.events.UIEvent:IKVM.OpenJDK.XML.API, Version=7.4.5196.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58
+-nowarn:100:javax.servlet.http.HttpServlet
+-nowarn:100:org.apache.tools.ant.Task
+-nowarn:109:org.w3c.dom.html.HTMLDOMImplementation:IKVM.OpenJDK.XML.API, Version=7.4.5196.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58
+-nowarn:101:be.re.css.BlockContainerFilter:be.re.css.BlockContainerFilter (52.0)
+-nowarn:101:be.re.css.CSSPageRule:be.re.css.CSSPageRule (52.0)
+-nowarn:101:be.re.css.CSSResolver:be.re.css.CSSResolver (52.0)
+-nowarn:101:be.re.css.CSSRule$1:be.re.css.CSSRule$1 (52.0)
+-nowarn:101:be.re.css.CSSRule$Builder:be.re.css.CSSRule$Builder (52.0)
+-nowarn:101:be.re.css.CSSRule$Specificity:be.re.css.CSSRule$Specificity (52.0)
+-nowarn:101:be.re.css.CSSRule:be.re.css.CSSRule (52.0)
+-nowarn:101:be.re.css.CSSRuleCollector:be.re.css.CSSRuleCollector (52.0)
+-nowarn:101:be.re.css.CSSRuleSet$Builder:be.re.css.CSSRuleSet$Builder (52.0)
+-nowarn:101:be.re.css.CSSRuleSet:be.re.css.CSSRuleSet (52.0)
+-nowarn:101:be.re.css.CSSRuleSetBuilder:be.re.css.CSSRuleSetBuilder (52.0)
+-nowarn:101:be.re.css.CSSToFOPNew$1:be.re.css.CSSToFOPNew$1 (52.0)
+-nowarn:101:be.re.css.CSSToFOPNew$FopCommandLine:be.re.css.CSSToFOPNew$FopCommandLine (52.0)
+-nowarn:101:be.re.css.CSSToFOPNew:be.re.css.CSSToFOPNew (52.0)
+-nowarn:101:be.re.css.CSSToXSLFO:be.re.css.CSSToXSLFO (52.0)
+-nowarn:101:be.re.css.CSSToXSLFOException:be.re.css.CSSToXSLFOException (52.0)
+-nowarn:101:be.re.css.CSSToXSLFOFilter:be.re.css.CSSToXSLFOFilter (52.0)
+-nowarn:101:be.re.css.CSSToXSLFOFilterFactory:be.re.css.CSSToXSLFOFilterFactory (52.0)
+-nowarn:101:be.re.css.CenterFilter:be.re.css.CenterFilter (52.0)
+-nowarn:101:be.re.css.Compiled$1:be.re.css.Compiled$1 (52.0)
+-nowarn:101:be.re.css.Compiled$DFAState:be.re.css.Compiled$DFAState (52.0)
+-nowarn:101:be.re.css.Compiled$Event:be.re.css.Compiled$Event (52.0)
+-nowarn:101:be.re.css.Compiled$NFAState:be.re.css.Compiled$NFAState (52.0)
+-nowarn:101:be.re.css.Compiled$Next:be.re.css.Compiled$Next (52.0)
+-nowarn:101:be.re.css.Compiled:be.re.css.Compiled (52.0)
+-nowarn:101:be.re.css.Constants:be.re.css.Constants (52.0)
+-nowarn:101:be.re.css.Context:be.re.css.Context (52.0)
+-nowarn:101:be.re.css.DefaultCSSResolver:be.re.css.DefaultCSSResolver (52.0)
+-nowarn:101:be.re.css.DisplayNonePropagator:be.re.css.DisplayNonePropagator (52.0)
+-nowarn:101:be.re.css.Element:be.re.css.Element (52.0)
+-nowarn:101:be.re.css.FOMarkerFilter$1:be.re.css.FOMarkerFilter$1 (52.0)
+-nowarn:101:be.re.css.FOMarkerFilter:be.re.css.FOMarkerFilter (52.0)
+-nowarn:101:be.re.css.FirstLetterFilter$1:be.re.css.FirstLetterFilter$1 (52.0)
+-nowarn:101:be.re.css.FirstLetterFilter:be.re.css.FirstLetterFilter (52.0)
+-nowarn:101:be.re.css.FootnoteFilter$1:be.re.css.FootnoteFilter$1 (52.0)
+-nowarn:101:be.re.css.FootnoteFilter$2:be.re.css.FootnoteFilter$2 (52.0)
+-nowarn:101:be.re.css.FootnoteFilter:be.re.css.FootnoteFilter (52.0)
+-nowarn:101:be.re.css.ForeignFilter:be.re.css.ForeignFilter (52.0)
+-nowarn:101:be.re.css.InternedElementSelector:be.re.css.InternedElementSelector (52.0)
+-nowarn:101:be.re.css.InvalidPropertyFilter:be.re.css.InvalidPropertyFilter (52.0)
+-nowarn:101:be.re.css.LengthAdjustFilter:be.re.css.LengthAdjustFilter (52.0)
+-nowarn:101:be.re.css.LinkFilter$1:be.re.css.LinkFilter$1 (52.0)
+-nowarn:101:be.re.css.LinkFilter$Element:be.re.css.LinkFilter$Element (52.0)
+-nowarn:101:be.re.css.LinkFilter:be.re.css.LinkFilter (52.0)
+-nowarn:101:be.re.css.ListImageLabelFilter:be.re.css.ListImageLabelFilter (52.0)
+-nowarn:101:be.re.css.MarkerFilter$1:be.re.css.MarkerFilter$1 (52.0)
+-nowarn:101:be.re.css.MarkerFilter:be.re.css.MarkerFilter (52.0)
+-nowarn:101:be.re.css.Matcher$1:be.re.css.Matcher$1 (52.0)
+-nowarn:101:be.re.css.Matcher$2:be.re.css.Matcher$2 (52.0)
+-nowarn:101:be.re.css.Matcher$Element:be.re.css.Matcher$Element (52.0)
+-nowarn:101:be.re.css.Matcher$TestAttribute:be.re.css.Matcher$TestAttribute (52.0)
+-nowarn:101:be.re.css.Matcher:be.re.css.Matcher (52.0)
+-nowarn:101:be.re.css.NormalizeTableFilter:be.re.css.NormalizeTableFilter (52.0)
+-nowarn:101:be.re.css.PageSetupFilter$1:be.re.css.PageSetupFilter$1 (52.0)
+-nowarn:101:be.re.css.PageSetupFilter$Element:be.re.css.PageSetupFilter$Element (52.0)
+-nowarn:101:be.re.css.PageSetupFilter$Recorder$Event:be.re.css.PageSetupFilter$Recorder$Event (52.0)
+-nowarn:101:be.re.css.PageSetupFilter$Recorder:be.re.css.PageSetupFilter$Recorder (52.0)
+-nowarn:101:be.re.css.PageSetupFilter:be.re.css.PageSetupFilter (52.0)
+-nowarn:101:be.re.css.ProjectorFilter$1:be.re.css.ProjectorFilter$1 (52.0)
+-nowarn:101:be.re.css.ProjectorFilter$Element:be.re.css.ProjectorFilter$Element (52.0)
+-nowarn:101:be.re.css.ProjectorFilter:be.re.css.ProjectorFilter (52.0)
+-nowarn:101:be.re.css.Property:be.re.css.Property (52.0)
+-nowarn:101:be.re.css.Rule:be.re.css.Rule (52.0)
+-nowarn:101:be.re.css.RuleComparator:be.re.css.RuleComparator (52.0)
+-nowarn:101:be.re.css.RuleSet:be.re.css.RuleSet (52.0)
+-nowarn:101:be.re.css.SpaceCorrectionFilter:be.re.css.SpaceCorrectionFilter (52.0)
+-nowarn:101:be.re.css.TestSAC$1:be.re.css.TestSAC$1 (52.0)
+-nowarn:101:be.re.css.TestSAC$SACWriter:be.re.css.TestSAC$SACWriter (52.0)
+-nowarn:101:be.re.css.TestSAC$Tuple:be.re.css.TestSAC$Tuple (52.0)
+-nowarn:101:be.re.css.TestSAC:be.re.css.TestSAC (52.0)
+-nowarn:101:be.re.css.Util$1:be.re.css.Util$1 (52.0)
+-nowarn:101:be.re.css.Util$PostProjectionFilter:be.re.css.Util$PostProjectionFilter (52.0)
+-nowarn:101:be.re.css.Util:be.re.css.Util (52.0)
+-nowarn:101:be.re.css.WidthAndMarginsFilter:be.re.css.WidthAndMarginsFilter (52.0)
+-nowarn:101:be.re.css.WrapperFilter$1:be.re.css.WrapperFilter$1 (52.0)
+-nowarn:101:be.re.css.WrapperFilter$Element:be.re.css.WrapperFilter$Element (52.0)
+-nowarn:101:be.re.css.WrapperFilter:be.re.css.WrapperFilter (52.0)
+-nowarn:101:be.re.css.XHTMLAttributeTranslationFilter$1:be.re.css.XHTMLAttributeTranslationFilter$1 (52.0)
+-nowarn:101:be.re.css.XHTMLAttributeTranslationFilter$Preceding:be.re.css.XHTMLAttributeTranslationFilter$Preceding (52.0)
+-nowarn:101:be.re.css.XHTMLAttributeTranslationFilter$Tuple:be.re.css.XHTMLAttributeTranslationFilter$Tuple (52.0)
+-nowarn:101:be.re.css.XHTMLAttributeTranslationFilter:be.re.css.XHTMLAttributeTranslationFilter (52.0)
+-nowarn:101:be.re.io.FlushOutputStream:be.re.io.FlushOutputStream (52.0)
+-nowarn:101:be.re.io.IOException:be.re.io.IOException (52.0)
+-nowarn:101:be.re.io.ReadLineInputStream:be.re.io.ReadLineInputStream (52.0)
+-nowarn:101:be.re.io.StreamConnector$1:be.re.io.StreamConnector$1 (52.0)
+-nowarn:101:be.re.io.StreamConnector:be.re.io.StreamConnector (52.0)
+-nowarn:101:be.re.io.Util$1:be.re.io.Util$1 (52.0)
+-nowarn:101:be.re.io.Util$2:be.re.io.Util$2 (52.0)
+-nowarn:101:be.re.io.Util:be.re.io.Util (52.0)
+-nowarn:101:be.re.net.BasicUser:be.re.net.BasicUser (52.0)
+-nowarn:101:be.re.net.Headers$Header:be.re.net.Headers$Header (52.0)
+-nowarn:101:be.re.net.Headers:be.re.net.Headers (52.0)
+-nowarn:101:be.re.net.User:be.re.net.User (52.0)
+-nowarn:101:be.re.net.Util$1:be.re.net.Util$1 (52.0)
+-nowarn:101:be.re.net.Util$2:be.re.net.Util$2 (52.0)
+-nowarn:101:be.re.net.Util$3:be.re.net.Util$3 (52.0)
+-nowarn:101:be.re.net.Util$TestChar:be.re.net.Util$TestChar (52.0)
+-nowarn:101:be.re.net.Util:be.re.net.Util (52.0)
+-nowarn:101:be.re.util.Array:be.re.util.Array (52.0)
+-nowarn:101:be.re.util.Equal:be.re.util.Equal (52.0)
+-nowarn:101:be.re.util.UUID:be.re.util.UUID (52.0)
+-nowarn:101:be.re.util.Util:be.re.util.Util (52.0)
+-nowarn:101:be.re.xml.Accumulator$1:be.re.xml.Accumulator$1 (52.0)
+-nowarn:101:be.re.xml.Accumulator$2:be.re.xml.Accumulator$2 (52.0)
+-nowarn:101:be.re.xml.Accumulator$ProcessElement:be.re.xml.Accumulator$ProcessElement (52.0)
+-nowarn:101:be.re.xml.Accumulator$Result:be.re.xml.Accumulator$Result (52.0)
+-nowarn:101:be.re.xml.Accumulator:be.re.xml.Accumulator (52.0)
+-nowarn:101:be.re.xml.CatalogResolver:be.re.xml.CatalogResolver (52.0)
+-nowarn:101:be.re.xml.DOMToContentHandler:be.re.xml.DOMToContentHandler (52.0)
+-nowarn:101:be.re.xml.ExpandedName:be.re.xml.ExpandedName (52.0)
+-nowarn:101:be.re.xml.Util$1:be.re.xml.Util$1 (52.0)
+-nowarn:101:be.re.xml.Util$2:be.re.xml.Util$2 (52.0)
+-nowarn:101:be.re.xml.Util$3:be.re.xml.Util$3 (52.0)
+-nowarn:101:be.re.xml.Util:be.re.xml.Util (52.0)
+-nowarn:101:be.re.xml.sax.BalanceChecker:be.re.xml.sax.BalanceChecker (52.0)
+-nowarn:101:be.re.xml.sax.ErrorHandler:be.re.xml.sax.ErrorHandler (52.0)
+-nowarn:101:be.re.xml.sax.FilterOfFilters:be.re.xml.sax.FilterOfFilters (52.0)
+-nowarn:101:be.re.xml.sax.GobbleDocumentEvents:be.re.xml.sax.GobbleDocumentEvents (52.0)
+-nowarn:101:be.re.xml.sax.ProtectEventHandlerFilter:be.re.xml.sax.ProtectEventHandlerFilter (52.0)
+-nowarn:101:be.re.xml.sax.Tee:be.re.xml.sax.Tee (52.0)
+-nowarn:101:be.re.xml.sax.TransformerHandlerFilter:be.re.xml.sax.TransformerHandlerFilter (52.0)
+-nowarn:101:be.re.xml.sax.Util$1:be.re.xml.sax.Util$1 (52.0)
+-nowarn:101:be.re.xml.sax.Util$ParameterizableTemplate:be.re.xml.sax.Util$ParameterizableTemplate (52.0)
+-nowarn:101:be.re.xml.sax.Util:be.re.xml.sax.Util (52.0)
+-nowarn:100:org.apache.log.Logger
+-nowarn:100:org.apache.log4j.Level
+-nowarn:100:org.apache.log4j.Category
+-nowarn:100:org.apache.log4j.Logger
+-nowarn:100:org.w3c.dom.svg.SVGSVGElement
+-nowarn:100:org.w3c.dom.svg.SVGTransformable
+-nowarn:100:org.w3c.dom.svg.SVGFitToViewBox
+-nowarn:100:org.w3c.dom.svg.EventListenerInitializer
+-nowarn:100:org.w3c.dom.svg.SVGAElement
+-nowarn:100:org.w3c.dom.svg.SVGImageElement
+-nowarn:100:org.w3c.dom.svg.SVGTests
+-nowarn:100:org.w3c.dom.svg.SVGTextPositioningElement
+-nowarn:100:org.w3c.dom.svg.SVGTextContentElement
+-nowarn:100:org.w3c.dom.svg.SVGUseElement
+-nowarn:100:org.w3c.dom.svg.SVGLangSpace
+-nowarn:100:com.sun.image.codec.jpeg.JPEGCodec
+-nowarn:100:com.sun.image.codec.jpeg.JPEGImageEncoder
+-nowarn:100:com.sun.image.codec.jpeg.JPEGEncodeParam
+-nowarn:100:com.sun.image.codec.jpeg.JPEGImageDecoder
+-nowarn:100:com.sun.image.codec.jpeg.TruncatedFileException
+-nowarn:100:org.mozilla.javascript.Callable
+-nowarn:100:org.mozilla.javascript.Context
+-nowarn:100:org.mozilla.javascript.ScriptableObject
+-nowarn:100:org.mozilla.javascript.JavaScriptException
+-nowarn:100:org.mozilla.javascript.WrappedException
+-nowarn:100:org.mozilla.javascript.ClassCache
+-nowarn:100:org.mozilla.javascript.NativeObject
+-nowarn:100:org.apache.log4j.Priority
+-nowarn:100:org.apache.log.Hierarchy
+-nowarn:100:javax.servlet.ServletContext
+-nowarn:100:org.apache.tools.ant.BuildException
+-nowarn:100:org.apache.tools.ant.util.GlobPatternMapper
+-nowarn:100:org.apache.tools.ant.types.FileSet
+-nowarn:100:org.apache.tools.ant.DirectoryScanner
+-nowarn:100:javax.media.jai.LookupTableJAI
+-nowarn:100:javax.media.jai.KernelJAI
+-nowarn:100:javax.media.jai.ColorCube
+-nowarn:100:javax.media.jai.ImageLayout
+-nowarn:100:javax.media.jai.JAI
+-nowarn:100:org.apache.xml.resolver.CatalogManager
+-nowarn:100:org.apache.xml.resolver.Catalog
+-nowarn:100:org.apache.xml.resolver.readers.SAXCatalogReader

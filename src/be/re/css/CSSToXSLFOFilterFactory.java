@@ -9,9 +9,11 @@ import be.re.xml.sax.TransformerHandlerFilter;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Map;
+import javax.xml.transform.Source;
 import javax.xml.transform.Templates;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.URIResolver;
 import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamSource;
@@ -74,18 +76,22 @@ public class CSSToXSLFOFilterFactory
     protected SAXTransformerFactory createTransformerFactory() throws TransformerConfigurationException
     {
         SAXTransformerFactory result = be.re.xml.sax.Util.newSAXTransformerFactory();
-        result.setURIResolver((String href, String base) ->
+        result.setURIResolver(new URIResolver()
         {
-            try
+            @Override
+            public Source resolve(String href, String base)
             {
-                URL xslUrl = base != null && be.re.net.Util.isUrl(base)
-                        ? new URL(new URL(base), href)
-                        : new URL(CSSToXSLFOFilter.class.getResource("style/css.xsl"), href);
-                return new StreamSource(xslUrl.openStream());
-            } 
-            catch (Exception e)
-            {
-                return null;
+                try
+                {
+                    URL xslUrl = base != null && be.re.net.Util.isUrl(base)
+                            ? new URL(new URL(base), href)
+                            : new URL(CSSToXSLFOFilter.class.getResource("style/css.xsl"), href);
+                    return new StreamSource(xslUrl.openStream());
+                }
+                catch (Exception e)
+                {
+                    return null;
+                }
             }
         });
         return result;

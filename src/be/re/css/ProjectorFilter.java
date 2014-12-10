@@ -769,39 +769,47 @@ class ProjectorFilter extends XMLFilterImpl
      */
     private void installRegionAccumulator() throws SAXException
     {
-        Accumulator.postAccumulate(this, (org.w3c.dom.Element element, XMLFilter filter) ->
+        Accumulator.postAccumulate(this, new Accumulator.ProcessElement()
         {
-            String pageName = element.getAttributeNS(Constants.CSS, "page");
-            if (pageName.equals("") || pageName.equals("auto"))
+            @Override
+            public void process(org.w3c.dom.Element element, XMLFilter filter)
             {
-                pageName = "unnamed";
+                String pageName = element.getAttributeNS(Constants.CSS, "page");
+                if (pageName.equals("") || pageName.equals("auto"))
+                {
+                    pageName = "unnamed";
+                }
+                
+                element.setAttributeNS(Constants.CSS, "css:page", pageName);
+                
+                Map<String, org.w3c.dom.Element> regionsForPage = context.regions.get(pageName);
+                if (regionsForPage == null)
+                {
+                    regionsForPage = new HashMap();
+                    context.regions.put(pageName, regionsForPage);
+                }
+                
+                regionsForPage.put(element.getAttributeNS(Constants.CSS, "region"), element);
             }
-            
-            element.setAttributeNS(Constants.CSS, "css:page", pageName);
-            
-            Map<String, org.w3c.dom.Element> regionsForPage = context.regions.get(pageName);
-            if (regionsForPage == null)
-            {
-                regionsForPage = new HashMap();
-                context.regions.put(pageName, regionsForPage);
-            }
-            
-            regionsForPage.put(element.getAttributeNS(Constants.CSS, "region"), element);
         });
     }
 
     private void installStringSetAccumulator(final String name, final String value, final Map scope) throws SAXException
     {
-        Accumulator.postAccumulate(this, (org.w3c.dom.Element element, XMLFilter filter) ->
+        Accumulator.postAccumulate(this, new Accumulator.ProcessElement()
         {
-            String result = MessageFormat.format(
-                    value,
-                    new Object[] { getElementContents(element.getFirstChild()) });
-            
-            scope.put(name, result);
-            addFOMarker(element, name, result);
-            
-            DOMToContentHandler.elementToContentHandler(element, filter.getContentHandler());
+            @Override
+            public void process(org.w3c.dom.Element element, XMLFilter filter) throws SAXException
+            {
+                String result = MessageFormat.format(
+                        value,
+                        new Object[] { getElementContents(element.getFirstChild()) });
+                
+                scope.put(name, result);
+                addFOMarker(element, name, result);
+                
+                DOMToContentHandler.elementToContentHandler(element, filter.getContentHandler());
+            }
         });
     }
 
