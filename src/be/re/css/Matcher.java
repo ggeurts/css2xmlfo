@@ -30,8 +30,8 @@ public class Matcher implements ContentHandler
 
     private static final String DEFAULT_LANGUAGE = "en-GB";
 
-    private Stack<Element> elements = new Stack<>();
-    private Compiled.DFAState startState;
+    private final Stack<Element> elements = new Stack<>();
+    private final Compiled.DFAState startState;
     private static final boolean trace = System.getProperty("be.re.css.trace") != null;
 
     public Matcher(Compiled styleSheet)
@@ -170,18 +170,8 @@ public class Matcher implements ContentHandler
 
     private static boolean checkOneOfAttributeCondition(Element e, AttributeCondition c)
     {
-        return checkAttributeCondition(
-                e,
-                c,
-                new TestAttribute()
-                {
-                    @Override
-                    public boolean test(Attributes atts, int i, AttributeCondition c)
-                    {
-                        return hasToken(atts.getValue(i), c.getValue());
-                    }
-                }
-        );
+        return checkAttributeCondition(e, c, 
+                (Attributes atts, int i, AttributeCondition c1) -> hasToken(atts.getValue(i), c1.getValue()));
     }
 
     private static boolean checkPositionalCondition(Element e, int position)
@@ -248,8 +238,7 @@ public class Matcher implements ContentHandler
 
         for (Compiled.DFAState state : states)
         {
-            Compiled.DFAState nextState = state.events.get(Compiled.SIBLING);
-
+            Compiled.DFAState nextState = state.events.get(Compiled.Event.SiblingElement);
             if (nextState != null)
             {
                 result.add(nextState);
@@ -367,31 +356,29 @@ public class Matcher implements ContentHandler
      */
     private static void step(Compiled.DFAState state, Element element)
     {
-        stepOneEvent(
-                state,
-                element,
-                ("".equals(element.namespaceURI) ? "*" : element.namespaceURI) + "|" + element.localName);
+        Compiled.Event event = new Compiled.Event(element.namespaceURI, element.localName);
+        stepOneEvent(state, element, event);
 
-        if (!"".equals(element.namespaceURI))
+        if (event.hasNamespaceUri())
         {
-            stepOneEvent(state, element, "*|" + element.localName);
-            stepOneEvent(state, element, element.namespaceURI + "|*");
+            stepOneEvent(state, element, event.forAnyNamespace());
+            stepOneEvent(state, element, event.forAnyLocalName());
         } 
         else
         {
-            stepOneEvent(state, element, DocumentHandler.SAC_NO_URI + "|" + element.localName);
+            stepOneEvent(state, element, event.forNamespace(DocumentHandler.SAC_NO_URI));
         }
 
-        stepOneEvent(state, element, Compiled.ANY_ELEMENT);
+        stepOneEvent(state, element, Compiled.Event.AnyElement);
     }
 
-    private static void stepOneEvent(Compiled.DFAState state, Element element, String name)
+    private static void stepOneEvent(Compiled.DFAState state, Element element, Compiled.Event eventKey)
     {
-        Compiled.DFAState nextState = state.events.get(name);
+        Compiled.DFAState nextState = state.events.get(eventKey);
 
         if (nextState != null)
         {
-            traceTransition(state, nextState, name);
+            traceTransition(state, nextState, eventKey);
             element.states.add(nextState);
             stepThroughConditions(nextState, element);
         }
@@ -442,7 +429,8 @@ public class Matcher implements ContentHandler
                     String.valueOf(from.state) + " -> " + String.valueOf(to.state)
                     + ": "
                     + (event instanceof Condition
-                            ? Util.conditionText((Condition) event) : event.toString())
+                            ? Util.conditionText((Condition) event) 
+                            : event.toString())
             );
         }
     }

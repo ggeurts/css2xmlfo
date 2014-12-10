@@ -1,6 +1,5 @@
 package be.re.css;
 
-import be.re.util.DigitalTree;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,6 +7,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -25,10 +25,7 @@ import org.w3c.css.sac.SiblingSelector;
  */
 public class Compiled implements Cloneable
 {
-    static final String ANY_ELEMENT = "*|*".intern();
     private static final int END_STATE = 1;
-    private static final String EPSILON = "EPSILON".intern();
-    static final String SIBLING = "SIBLING".intern();
     private static final int START_STATE = 0;
 
     private int dfaStateCounter = 0;
@@ -61,8 +58,8 @@ public class Compiled implements Cloneable
             states[END_STATE].pseudoRules.add(rule);
         }
 
-        nfa[START_STATE].next.add(new Next(EPSILON, states[START_STATE]));
-        states[END_STATE].next.add(new Next(EPSILON, nfa[END_STATE]));
+        nfa[START_STATE].next.add(new Next(Event.Epsilon, states[START_STATE]));
+        states[END_STATE].next.add(new Next(Event.Epsilon, nfa[END_STATE]));
     }
 
     private static Map<Object, SortedSet<NFAState>> collectNextSets(SortedSet<NFAState> set)
@@ -73,7 +70,7 @@ public class Compiled implements Cloneable
         {
             for (Next next : state.next)
             {
-                if (next.event != EPSILON)
+                if (next.event != Event.Epsilon)
                 {
                     SortedSet<NFAState> nextSet = result.get(next.event);
                     if (nextSet == null)
@@ -99,7 +96,7 @@ public class Compiled implements Cloneable
 
     private static NFAState[] constructAnd(NFAState[] first, NFAState[] second)
     {
-        first[END_STATE].next.add(new Next(EPSILON, second[START_STATE]));
+        first[END_STATE].next.add(new Next(Event.Epsilon, second[START_STATE]));
         return new NFAState[] {  first[START_STATE], second[END_STATE] };
     }
 
@@ -123,7 +120,7 @@ public class Compiled implements Cloneable
     private NFAState[] constructDescendant(DescendantSelector selector)
     {
         return constructAnd(
-                constructAnd(constructNFA(selector.getAncestorSelector()), constructKleeneClosure(ANY_ELEMENT)),
+                constructAnd(constructNFA(selector.getAncestorSelector()), constructKleeneClosure(Event.AnyElement)),
                 constructNFA(selector.getSimpleSelector()));
     }
 
@@ -131,16 +128,7 @@ public class Compiled implements Cloneable
     {
         NFAState start = new NFAState();
         NFAState end = new NFAState();
-
-        start.next.add(
-                new Next(
-                        ((selector.getNamespaceURI() != null ? selector.getNamespaceURI() : "*") 
-                                + "|"
-                                + (selector.getLocalName() != null ? selector.getLocalName().intern() : "*")).intern(), 
-                        end
-                )
-        );
-
+        start.next.add(new Next(new Event(selector.getNamespaceURI(), selector.getLocalName()), end));
         return new NFAState[] { start, end };
     }
 
@@ -152,10 +140,10 @@ public class Compiled implements Cloneable
         NFAState to = new NFAState();
 
         from.next.add(new Next(event, to));
-        start.next.add(new Next(EPSILON, from));
-        start.next.add(new Next(EPSILON, end));
-        to.next.add(new Next(EPSILON, end));
-        end.next.add(new Next(EPSILON, from));
+        start.next.add(new Next(Event.Epsilon, from));
+        start.next.add(new Next(Event.Epsilon, end));
+        to.next.add(new Next(Event.Epsilon, end));
+        end.next.add(new Next(Event.Epsilon, from));
 
         return new NFAState[] { start, end };
     }
@@ -200,7 +188,7 @@ public class Compiled implements Cloneable
         NFAState start = new NFAState();
         NFAState end = new NFAState();
 
-        start.next.add(new Next(SIBLING, end));
+        start.next.add(new Next(Event.SiblingElement, end));
         return new NFAState[] { start, end };
     }
 
@@ -229,9 +217,9 @@ public class Compiled implements Cloneable
 
         List values = new ArrayList();
 
-        for (String event : state.events.keySet())
+        for (Event event : state.events.keySet())
         {
-            DFAState nextState = (DFAState) state.events.get(event);
+            DFAState nextState = state.events.get(event);
 
             out.println("  " + event + " -> " + String.valueOf(nextState.state));
             values.add(nextState);
@@ -320,7 +308,7 @@ public class Compiled implements Cloneable
     {
         for (Next next : state.next)
         {
-            if (next.event == EPSILON && set.add(next.state))
+            if (next.event == Event.Epsilon && set.add(next.state))
             {
                 epsilonMove(set, next.state);
             }
@@ -384,7 +372,7 @@ public class Compiled implements Cloneable
                 }
                 else
                 {
-                    from.events.put((String) event, nextState);
+                    from.events.put((Event)event, nextState);
                 }
 
                 for (NFAState next : nextSet)
@@ -417,7 +405,7 @@ public class Compiled implements Cloneable
     class DFAState
     {
         Map<Condition, DFAState> candidateConditions = new HashMap<>();
-        DigitalTree<DFAState> events = new DigitalTree<>(trace);
+        Map<Event, DFAState> events = new HashMap<>();
         List<Rule> pseudoRules = new ArrayList<>();
         List<Rule> rules = new ArrayList<>();
         int state;
@@ -459,4 +447,103 @@ public class Compiled implements Cloneable
             this.state = original.state;
         }
     } // NFAState
+
+    public static class Event
+    {
+        private static final int TYPE_ELEMENT = 0;
+        private static final int TYPE_SIBLING = 1;
+        private static final int TYPE_EPSILON = 2;
+        
+        private static final String ASTERISK = "*".intern();
+        public static final Event AnyElement = new Event(ASTERISK, ASTERISK, true);
+        public static final Event SiblingElement = new Event(TYPE_SIBLING);
+        public static final Event Epsilon = new Event(TYPE_EPSILON);
+        
+        private final int eventType;
+        private final String namespaceUri;
+        private final String localName;
+        
+        public Event(String namespaceUri, String localName)
+        {
+            this.namespaceUri = getAsteriskOrIntern(namespaceUri);
+            this.localName = getAsteriskOrIntern(localName);
+            this.eventType = TYPE_ELEMENT;
+        }
+
+        private Event(String namespaceUri, String localName, boolean isAsteriskOrIntern)
+        {
+            if (isAsteriskOrIntern)
+            {
+                this.namespaceUri = namespaceUri;
+                this.localName = localName;
+            }
+            else
+            {
+                this.namespaceUri = getAsteriskOrIntern(namespaceUri);
+                this.localName = getAsteriskOrIntern(localName);
+            }
+            this.eventType = TYPE_ELEMENT;
+        }
+        
+        private Event(int eventType)
+        {
+            this.namespaceUri = this.localName = null;
+            this.eventType = eventType;
+        }
+        
+        @SuppressWarnings("StringEquality")
+        public boolean hasNamespaceUri()
+        {
+            return this.namespaceUri != ASTERISK;
+        }
+        
+        public Event forAnyNamespace()
+        {
+            return new Event(ASTERISK, this.localName, true);
+        }
+
+        public Event forAnyLocalName()
+        {
+            return new Event(this.namespaceUri, ASTERISK, true);
+        }
+
+        public Event forNamespace(String namespaceUri)
+        {
+            return new Event(getAsteriskOrIntern(namespaceUri), this.localName, true);
+        }
+        
+        @Override
+        public String toString()
+        {
+            return namespaceUri + '|' + localName;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            if (eventType != 0) return eventType;
+            
+            int hash = 5;
+            hash = 19 * hash + Objects.hashCode(this.namespaceUri);
+            hash = 19 * hash + Objects.hashCode(this.localName);
+            return hash;
+        }
+
+        @Override
+        @SuppressWarnings("StringEquality")
+        public boolean equals(Object obj)
+        {
+            if (obj == null) return false;
+            if (getClass() != obj.getClass()) return false;
+            final Event other = (Event) obj;
+            return this.eventType == other.eventType 
+                    && this.namespaceUri == other.namespaceUri 
+                    && this.localName == other.localName;
+        }
+        
+        private static String getAsteriskOrIntern(String s)
+        {
+            return s == null || s.length() == 0 ? ASTERISK : s.intern();
+        }
+    }
 } // Compiled
