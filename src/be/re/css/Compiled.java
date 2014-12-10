@@ -45,17 +45,6 @@ public class Compiled implements Cloneable
     }
 
     /**
-     * Creates copy of compiled CSS rule collection.
-     * @param other
-     */
-    public Compiled(Compiled other)
-    {
-        NFAStateCopier copier = new NFAStateCopier();
-        nfa = new NFAState[] { copier.copy(other.nfa[0]), copier.copy(other.nfa[1]) };
-        nfaStateCounter = other.nfaStateCounter;
-    }
-    
-    /**
      * Adds the rule to the NFA being built using the Thompson construction. The
      * rule should be split, i.e. it should have exactly one property.
      */
@@ -76,37 +65,32 @@ public class Compiled implements Cloneable
         states[END_STATE].next.add(new Next(EPSILON, nfa[END_STATE]));
     }
 
-    private static Map collectNextSets(SortedSet set)
+    private static Map<Object, SortedSet<NFAState>> collectNextSets(SortedSet<NFAState> set)
     {
-        Map result = new HashMap();
+        Map<Object, SortedSet<NFAState>> result = new HashMap<>();
 
-        for (Iterator i = set.iterator(); i.hasNext();)
+        for (NFAState state : set)
         {
-            for (Next next : ((NFAState) i.next()).next)
+            for (Next next : state.next)
             {
                 if (next.event != EPSILON)
                 {
-                    SortedSet nextSet = (SortedSet) result.get(next.event);
-
+                    SortedSet<NFAState> nextSet = result.get(next.event);
                     if (nextSet == null)
                     {
-                        nextSet = new TreeSet(set.comparator());
+                        nextSet = new TreeSet<>(set.comparator());
                         result.put(next.event, nextSet);
                     }
-
                     nextSet.add(next.state);
                 }
             }
         }
 
-        for (Iterator i = result.values().iterator(); i.hasNext();)
+        for (SortedSet<NFAState> nextSet : result.values())
         {
-            TreeSet nextSet = (TreeSet) i.next();
-            SortedSet copy = (SortedSet) nextSet.clone();
-
-            for (Iterator j = copy.iterator(); j.hasNext();)
+            for (NFAState s : new ArrayList<>(nextSet))
             {
-                epsilonMove(nextSet, (NFAState) j.next());
+                epsilonMove(nextSet, s);
             }
         }
 
@@ -419,14 +403,12 @@ public class Compiled implements Cloneable
 
     private static String label(SortedSet<NFAState> set)
     {
-        String result = "";
-
+        StringBuilder result = new StringBuilder();
         for (NFAState i : set)
         {
-            result += "#" + String.valueOf(i.state);
+            result.append('#').append(i.state);
         }
-
-        return result;
+        return result.toString();
     }
 
     /**
@@ -477,25 +459,4 @@ public class Compiled implements Cloneable
             this.state = original.state;
         }
     } // NFAState
-
-    private class NFAStateCopier
-    {
-        private final Map<NFAState, NFAState> _copies = new HashMap<>();
-
-        NFAState copy(NFAState original)
-        {
-            NFAState copy = _copies.get(original);
-            if (copy == null)
-            {
-                copy = new NFAState(original);
-                _copies.put(original, copy);
-
-                for (Next n: original.next)
-                {
-                    copy.next.add(new Next(n.event, copy(n.state)));
-                }
-            }
-            return copy;
-        }
-    }
 } // Compiled
