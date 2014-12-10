@@ -32,9 +32,7 @@ class XHTMLAttributeTranslationFilter extends XMLFilterImpl
   private static final String	TH = "th".intern();
   private static final String	TR = "tr".intern();
 
-  private static final Map	map =
-    loadTable
-    (
+  private static final Map<String, List<Tuple>>	map = loadTable(
       new String[][]
       { // element, attribute, attribute value, CSS property, CSS property value
         {"applet", "align", "bottom", "vertical-align", "bottom"},
@@ -109,14 +107,8 @@ class XHTMLAttributeTranslationFilter extends XMLFilterImpl
         {"object", "border", null, "border-left-style", "solid"},
         {"object", "border", null, "border-right-style", "solid"},
         {"object", "border", null, "border-top-style", "solid"},
-        {
-          "object", "border", null, "border-after-width.conditionality",
-            "retain"
-        },
-        {
-          "object", "border", null, "border-before-width.conditionality",
-            "retain"
-        },
+        { "object", "border", null, "border-after-width.conditionality", "retain" },
+        { "object", "border", null, "border-before-width.conditionality", "retain" },
         {"li", "compact", null, "list-style-position", "inside"},
         {"li", "type", null, "list-style-type", null},
         {"object", "height", null, "height", null},
@@ -183,12 +175,11 @@ class XHTMLAttributeTranslationFilter extends XMLFilterImpl
         {"tr", "valign", null, "vertical-align", null},
         {"ul", "compact", null, "list-style-position", "inside"},
         {"ul", "type", null, "list-style-type", null}
-      }
-    );
+      });
 
-  private String	defaultBorderThickness;
-  private Stack		elementStack = new Stack();
-  private Stack		tableStack = new Stack();
+  private String defaultBorderThickness;
+  private final Stack<Element> elementStack = new Stack<>();
+  private final Stack<Element> tableStack = new Stack<>();
 
 
 
@@ -327,19 +318,19 @@ class XHTMLAttributeTranslationFilter extends XMLFilterImpl
 
 
 
-  private static Map
+  private static Map<String, List<Tuple>>
   loadTable(String[][] table)
   {
-    Map	result = new HashMap();
+    Map<String, List<Tuple>>	result = new HashMap<>();
 
     for (int i = 0; i < table.length; ++i)
     {
-      String	key = table[i][0] + "#" + table[i][1];
-      List	tuples = (List) result.get(key);
+      String key = table[i][0] + "#" + table[i][1];
+      List<Tuple> tuples = result.get(key);
 
       if (tuples == null)
       {
-        tuples = new ArrayList();
+        tuples = new ArrayList<>();
         result.put(key, tuples);
       }
 
@@ -354,19 +345,18 @@ class XHTMLAttributeTranslationFilter extends XMLFilterImpl
   private static Tuple[]
   lookup(String element, Attributes atts, String attribute, String value)
   {
-    List	tuples = (List) map.get(element + "#" + attribute);
+    List<Tuple> tuples = map.get(element + "#" + attribute);
 
     if (tuples == null)
     {
       return new Tuple[0];
     }
 
-    List	result = new ArrayList();
+    List<Tuple> result = new ArrayList<>();
 
     for (int i = 0; i < tuples.size(); ++i)
     {
-      Tuple	tuple = (Tuple) tuples.get(i);
-
+      Tuple tuple = (Tuple) tuples.get(i);
       if (tuple.inValue == null || tuple.inValue.equals(value))
       {
         String	otherAttribute;
@@ -410,7 +400,7 @@ class XHTMLAttributeTranslationFilter extends XMLFilterImpl
       }
     }
 
-    return (Tuple[]) result.toArray(new Tuple[result.size()]);
+    return result.toArray(new Tuple[result.size()]);
   }
 
 
@@ -524,7 +514,7 @@ class XHTMLAttributeTranslationFilter extends XMLFilterImpl
     String	borderSide
   )
   {
-    Element		table = (Element) tableStack.peek();
+    Element		table = tableStack.peek();
     String		border = table.atts.getValue("border");
     String		rules = table.atts.getValue("rules");
     AttributesImpl	result = new AttributesImpl(atts);
@@ -536,7 +526,7 @@ class XHTMLAttributeTranslationFilter extends XMLFilterImpl
 
     String	borderWidth =
       border == null ? defaultBorderThickness : (border + "px");
-    Element	parent = (Element) elementStack.peek();
+    Element	parent = elementStack.peek();
 
     if
     (
@@ -598,7 +588,7 @@ class XHTMLAttributeTranslationFilter extends XMLFilterImpl
   private AttributesImpl
   preprocessTableBorder(Attributes atts)
   {
-    Element		table = (Element) tableStack.peek();
+    Element		table = tableStack.peek();
     String		border = table.atts.getValue("border");
     String		frame = table.atts.getValue("frame");
     AttributesImpl	result = new AttributesImpl(atts);
@@ -711,7 +701,7 @@ class XHTMLAttributeTranslationFilter extends XMLFilterImpl
   private AttributesImpl
   preprocessTableCellPaddingAndSpacing(Attributes atts)
   {
-    Element		table = (Element) tableStack.peek();
+    Element		table = tableStack.peek();
     String		padding = table.atts.getValue("cellpadding");
     AttributesImpl	result = new AttributesImpl(atts);
     String		spacing = table.atts.getValue("cellspacing");
@@ -778,8 +768,7 @@ class XHTMLAttributeTranslationFilter extends XMLFilterImpl
         }
       }
 
-      Element	parent =
-        elementStack.empty() ? null : (Element) elementStack.peek();
+      Element	parent = elementStack.empty() ? null : elementStack.peek();
 
       if (parent != null)
       {

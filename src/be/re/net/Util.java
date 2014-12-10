@@ -38,7 +38,7 @@ public class Util
   private final static String[]	archiveExtensions =
     {"ear", "jar", "rar", "war", "zip"};
   private static ResourceBundle	bundle = null;
-  private static Map		bundles = new HashMap();
+  private static final Map<Locale, ResourceBundle> bundles = new HashMap<>();
 
 
 
@@ -525,12 +525,12 @@ public class Util
   public static String[]
   getPathSegments(String path)
   {
-    List		result = new ArrayList();
-    StringTokenizer	tokenizer = new StringTokenizer(path, "/");
+    List<String> result = new ArrayList<>();
+    StringTokenizer tokenizer = new StringTokenizer(path, "/");
 
     while (tokenizer.hasMoreTokens())
     {
-      String	token = tokenizer.nextToken();
+      String token = tokenizer.nextToken();
 
       if (!"".equals(token))
       {
@@ -538,7 +538,7 @@ public class Util
       }
     }
 
-    return (String[]) result.toArray(new String[0]);
+    return result.toArray(new String[result.size()]);
   }
 
 
@@ -574,9 +574,7 @@ public class Util
   {
     for (int i = 0; i < languageTags.length; ++i)
     {
-      ResourceBundle	bundle =
-        (ResourceBundle)
-          bundles.get(be.re.util.Util.getLocale(languageTags[i]));
+      ResourceBundle bundle = bundles.get(be.re.util.Util.getLocale(languageTags[i]));
 
       if (bundle == null)
       {
@@ -941,24 +939,20 @@ public class Util
   public static String
   resolveFullPath(String path) throws MalformedURLException
   {
-    List		segments = new ArrayList();
-    StringTokenizer	tokenizer = new StringTokenizer(path, "/");
+    List<String> segments = new ArrayList<>();
+    StringTokenizer tokenizer = new StringTokenizer(path, "/");
 
     while (tokenizer.hasMoreTokens())
     {
-      String	token = tokenizer.nextToken();
+      String token = tokenizer.nextToken();
 
       if (!token.equals("."))
       {
         if (token.equals(".."))
         {
-          if (segments.size() == 0)
+          if (segments.isEmpty())
           {
-            throw
-              new MalformedURLException
-              (
-                "URL specification goes outside of its root"
-              );
+            throw new MalformedURLException("URL specification goes outside of its root");
           }
 
           segments.remove(segments.size() - 1);
@@ -970,16 +964,11 @@ public class Util
       }
     }
 
-    String	result = "";
-
-    for
-    (
-      Iterator i = segments.iterator();
-      i.hasNext();
-      result += "/" + (String) i.next()
-    );
-
-    return result.equals("") ? "/" : (result + (path.endsWith("/") ? "/" : ""));
+    String result = "";
+    for(Iterator i = segments.iterator(); i.hasNext(); result += "/" + i.next());
+    return result.equals("") 
+            ? "/" 
+            : (result + (path.endsWith("/") ? "/" : ""));
   }
 
 

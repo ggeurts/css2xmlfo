@@ -259,8 +259,8 @@ public class DOMToContentHandler
   startPrefixMappings(Element element, ContentHandler handler)
     throws SAXException
   {
-    NamedNodeMap	map = element.getAttributes();
-    List		result = new ArrayList();
+    NamedNodeMap map = element.getAttributes();
+    List<String> result = new ArrayList<>();
 
     for (int i = 0; i < map.getLength(); ++i)
     {
@@ -278,7 +278,7 @@ public class DOMToContentHandler
       }
     }
 
-    return (String[]) result.toArray(new String[result.size()]);
+    return result.toArray(new String[result.size()]);
   }
 
 } // DOMToContentHandler

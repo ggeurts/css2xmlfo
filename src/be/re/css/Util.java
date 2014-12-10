@@ -293,7 +293,7 @@ class Util
 
     static URL[] createUrls(String s) throws MalformedURLException
     {
-        List result = new ArrayList();
+        List<URL> result = new ArrayList<>();
         StringTokenizer tokenizer = new StringTokenizer(s, ",");
 
         while (tokenizer.hasMoreTokens())
@@ -301,7 +301,7 @@ class Util
             result.add(createUrl(tokenizer.nextToken()));
         }
 
-        return (URL[]) result.toArray(new URL[0]);
+        return result.toArray(new URL[result.size()]);
     }
 
     static String getIndirectType(Attributes attributes, String property)
@@ -370,13 +370,13 @@ class Util
      */
     static Selector[] getSelectorChain(Selector selector)
     {
-        List result = getSelectorChainList(selector);
-        return (Selector[]) result.toArray(new Selector[result.size()]);
+        List<Selector> result = getSelectorChainList(selector);
+        return result.toArray(new Selector[result.size()]);
     }
 
-    private static List getSelectorChainList(Selector selector)
+    private static List<Selector> getSelectorChainList(Selector selector)
     {
-        List result;
+        List<Selector> result;
         switch (selector.getSelectorType())
         {
             case Selector.SAC_CHILD_SELECTOR:
@@ -387,7 +387,7 @@ class Util
                 break;
 
             case Selector.SAC_CONDITIONAL_SELECTOR:
-                result = new ArrayList();
+                result = new ArrayList<>();
                 result.add(selector);
                 result.addAll(getSelectorChainList(((ConditionalSelector) selector).getSimpleSelector()));
                 break;
@@ -399,13 +399,13 @@ class Util
                 break;
 
             case Selector.SAC_NEGATIVE_SELECTOR:
-                result = new ArrayList();
+                result = new ArrayList<>();
                 result.add(selector);
                 result.addAll(getSelectorChainList(((NegativeSelector) selector).getSimpleSelector()));
                 break;
 
             default:
-                result = new ArrayList();
+                result = new ArrayList<>();
                 result.add(selector);
         }
 
@@ -470,14 +470,12 @@ class Util
 
     static LexicalUnit[] lexicalUnitArray(LexicalUnit unit)
     {
-        List result = new ArrayList();
-
+        List<LexicalUnit> result = new ArrayList<>();
         for (LexicalUnit i = unit; i != null; i = i.getNextLexicalUnit())
         {
             result.add(i);
         }
-
-        return (LexicalUnit[]) result.toArray(new LexicalUnit[result.size()]);
+        return result.toArray(new LexicalUnit[result.size()]);
     }
 
     static String lexicalUnitAtom(LexicalUnit unit, URL baseUrl)

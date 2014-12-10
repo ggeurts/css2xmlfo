@@ -1,7 +1,5 @@
 package be.re.css;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.UndeclaredThrowableException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,25 +51,27 @@ public class Property
   private static final String[]	SYSTEM_FONTS =
     {"caption", "icon", "menu", "message-box", "small-caption", "status-bar"};
 
-    private URL baseUrl;
-    private boolean important;
-    private String name;
-    private Map prefixMap;
-    private LexicalUnit value;
-    private String valueAsString;
+    private final URL baseUrl;
+    private final boolean important;
+    private final String name;
+    private final Map<String, String> prefixMap;
+    private final LexicalUnit value;
+    private final String valueAsString;
 
     /**
      * Is not used for shorthand properties.
      */
-    Property(String name, String value, boolean important, Map prefixMap)
+    Property(String name, String value, boolean important, Map<String, String> prefixMap)
     {
         this.name = name;
+        this.value = null;
         this.valueAsString = value;
         this.important = important;
         this.prefixMap = prefixMap;
+        this.baseUrl = null;
     }
 
-    public Property(String name, LexicalUnit value, boolean important, Map prefixMap, URL baseUrl)
+    public Property(String name, LexicalUnit value, boolean important, Map<String, String> prefixMap, URL baseUrl)
     {
         this.name = name;
         this.value = value;
@@ -101,7 +101,7 @@ public class Property
         return value;
     }
 
-    public Map getPrefixMap()
+    public Map<String, String> getPrefixMap()
     {
         return prefixMap;
     }
@@ -192,7 +192,7 @@ public class Property
 
     private Property[] splitBackground()
     {
-        List result = new ArrayList();
+        List<Property> result = new ArrayList<>();
         String remaining = null;
 
         for (LexicalUnit i = value; i != null; i = i.getNextLexicalUnit())
@@ -231,7 +231,7 @@ public class Property
 
     private Property[] splitBorder()
     {
-        List result = new ArrayList();
+        List<Property> result = new ArrayList<>();
         String remaining = null;
 
         for (LexicalUnit i = value; i != null; i = i.getNextLexicalUnit())
@@ -315,7 +315,7 @@ public class Property
 
     private Property[] splitBorderSide(String side)
     {
-        List result = new ArrayList();
+        List<Property> result = new ArrayList<>();
         String remaining = null;
 
         for (LexicalUnit i = value; i != null; i = i.getNextLexicalUnit())
@@ -379,7 +379,7 @@ public class Property
 
     private Property[] splitFont()
     {
-        List result = new ArrayList();
+        List<Property> result = new ArrayList<>();
         String remaining = null;
 
         for (LexicalUnit i = value; i != null; i = i.getNextLexicalUnit())
@@ -515,7 +515,7 @@ public class Property
 
     private Property[] splitListStyle()
     {
-        List result = new ArrayList();
+        List<Property> result = new ArrayList<>();
 
         for (LexicalUnit i = value; i != null; i = i.getNextLexicalUnit())
         {

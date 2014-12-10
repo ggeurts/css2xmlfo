@@ -21,12 +21,7 @@ class LengthAdjustFilter extends XMLFilterImpl
 
 {
 
-  private static final Set	ofLengthType =
-    new HashSet
-    (
-      Arrays.asList
-      (
-        new String[]
+  private static final Set<String> ofLengthType = new HashSet<>(Arrays.asList(new String[]
         {
           "background-position",
           "border-bottom-width",
@@ -64,10 +59,7 @@ class LengthAdjustFilter extends XMLFilterImpl
           "vertical-align",
           "width",
           "word-spacing"
-        }
-      )
-    );
-
+        }));
 
 
   LengthAdjustFilter()

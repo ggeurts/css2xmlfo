@@ -32,7 +32,7 @@ class Element
   static final String	TABLE_ROW_GROUP = "table-row-group".intern();
 
   Attributes	atts;
-  List		children;
+  List<Element>	children;
   String	display; // Interned.
   Object	extra;
   String	localName;
@@ -62,7 +62,7 @@ class Element
   {
     if (children == null)
     {
-      children = new ArrayList(10);
+      children = new ArrayList<>(10);
     }
 
     children.add(child);

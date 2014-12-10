@@ -21,7 +21,7 @@ import org.w3c.css.sac.SelectorList;
 class CSSRuleCollector implements DocumentHandler
 {
     private final CSSRuleSetBuilder cssBuilder;
-    private final Map prefixMap = new HashMap();
+    private final Map<String, String> prefixMap = new HashMap<>();
     private CSSPageRule currentPageRule = null;
     private final List<CSSRule> currentRules = new ArrayList<>();
     private boolean ignore = false;

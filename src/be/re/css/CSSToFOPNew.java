@@ -29,7 +29,7 @@ public class CSSToFOPNew
 {
     public static void convert(URL in, OutputStream out, URL userAgentStyleSheet, String format) throws IOException, CSSToXSLFOException
     {
-        convert(in.openStream(), out, in, userAgentStyleSheet, null, new HashMap(), null, format, null, false, null);
+        convert(in.openStream(), out, in, userAgentStyleSheet, null, new HashMap<String, String>(), null, format, null, false, null);
     }
 
     public static void convert(InputStream in, OutputStream out, String format) throws IOException, CSSToXSLFOException
@@ -39,7 +39,7 @@ public class CSSToFOPNew
 
     public static void convert(InputStream in, OutputStream out, URL userAgentStyleSheet, String format) throws IOException, CSSToXSLFOException
     {
-        convert(in, out, null, userAgentStyleSheet, null, new HashMap(), null, format, null, false, null);
+        convert(in, out, null, userAgentStyleSheet, null, new HashMap<String, String>(), null, format, null, false, null);
     }
 
     public static void convert(
@@ -48,7 +48,7 @@ public class CSSToFOPNew
             URL baseUrl,
             URL userAgentStyleSheet,
             URL catalog,
-            Map parameters,
+            Map<String, String> parameters,
             URL[] preprocessors,
             String format,
             File configFile,
@@ -63,7 +63,7 @@ public class CSSToFOPNew
             URL baseUrl,
             URL userAgentStyleSheet,
             URL catalog,
-            Map parameters,
+            Map<String, String> parameters,
             URL[] preprocessors,
             String format,
             File configFile,
@@ -116,7 +116,7 @@ public class CSSToFOPNew
         URL baseUrl = null;
         URL catalog = null;
         String[] fopOptions = null;
-        Map parameters = new HashMap();
+        Map<String, String> parameters = new HashMap<>();
         URL[] preprocessors = null;
         URL url = null;
         URL userAgentStyleSheet = null;

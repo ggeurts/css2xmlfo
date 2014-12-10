@@ -19,7 +19,7 @@ class WrapperFilter extends XMLFilterImpl
 
 {
 
-  private Stack	elements = new Stack();
+  private final Stack<Element> elements = new Stack<>();
 
 
 
@@ -40,7 +40,7 @@ class WrapperFilter extends XMLFilterImpl
   endElement(String namespaceURI, String localName, String qName)
     throws SAXException
   {
-    if (!((Element) elements.pop()).remove)
+    if (!elements.pop().remove)
     {
       super.endElement(namespaceURI, localName, qName);
     }
@@ -105,18 +105,11 @@ class WrapperFilter extends XMLFilterImpl
     }
     else
     {
-      super.startElement
-      (
-        namespaceURI,
-        localName,
-        qName,
-        mergeInheritedProperties
-        (
-          atts,
-          elements.isEmpty() ?
-            null : ((Element) elements.peek()).inheritedProperties
-        )
-      );
+      super.startElement(
+            namespaceURI, 
+            localName, 
+            qName,
+            mergeInheritedProperties(atts, elements.isEmpty() ? null : elements.peek().inheritedProperties));
     }
 
     elements.push(element);

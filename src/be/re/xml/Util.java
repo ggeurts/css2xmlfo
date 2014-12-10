@@ -42,8 +42,7 @@ public class Util
 {
 
   private static DocumentBuilderFactory	nonValidatingFactory;
-  private static final Equal		elementSelector =
-    new Equal()
+  private static final Equal elementSelector = new Equal()
     {
       public boolean
       equal(Object object, Object refData)
@@ -101,7 +100,7 @@ public class Util
 
 
   private static void
-  collectChild(Node node, List children)
+  collectChild(Node node, List<Node> children)
   {
     if (node != null)
     {
@@ -119,11 +118,9 @@ public class Util
   public static Node[]
   collectChildren(Node node)
   {
-    List	children = new ArrayList();
-
+    List<Node> children = new ArrayList<>();
     collectChild(node.getFirstChild(), children);
-
-    return (Node[]) children.toArray(new Node[children.size()]);
+    return children.toArray(new Node[children.size()]);
   }
 
 
@@ -764,10 +761,20 @@ public class Util
     }
   }
 
+  private static void selectChild(Node node, List<Element> children)
+  {
+    if (node != null)
+    {
+      if (node instanceof Element)
+      {
+        children.add((Element)node);
+      }
 
+      selectChild(node.getNextSibling(), children);
+    }
+  }
 
-  private static void
-  selectChild(Node node, Equal equal, Object refData, List children)
+  private static void selectChild(Node node, Equal equal, Object refData, List<Node> children)
   {
     if (node != null)
     {
@@ -790,7 +797,7 @@ public class Util
     Object	refData,
     Equal	equalLimit,
     Object	refDataLimit,
-    List	children
+    List<Node>	children
   )
   {
     if (node != null)
@@ -826,11 +833,9 @@ public class Util
   public static Node[]
   selectChildren(Node node, Equal equal, Object refData)
   {
-    List	children = new ArrayList();
-
+    List<Node> children = new ArrayList<>();
     selectChild(node.getFirstChild(), equal, refData, children);
-
-    return (Node[]) children.toArray(new Node[children.size()]);
+    return children.toArray(new Node[children.size()]);
   }
 
 
@@ -886,7 +891,7 @@ public class Util
     Object	refDataLimit
   )
   {
-    List	children = new ArrayList();
+    List<Node> children = new ArrayList<>();
 
     selectChildNotBeyond
     (
@@ -898,7 +903,7 @@ public class Util
       children
     );
 
-    return (Node[]) children.toArray(new Node[children.size()]);
+    return children.toArray(new Node[children.size()]);
   }
 
 
@@ -926,11 +931,9 @@ public class Util
   public static Element
   selectElement(Node node, ExpandedName[] path)
   {
-    List	result = new ArrayList();
-
+    List<Element> result = new ArrayList<>();
     selectElements(node, path, 0, result);
-
-    return result.size() == 1 ? (Element) result.get(0) : null;
+    return result.size() == 1 ? result.get(0) : null;
   }
 
 
@@ -938,13 +941,10 @@ public class Util
   public static Element[]
   selectElements(Node node)
   {
-    List	children = new ArrayList();
-
-    selectChild(node.getFirstChild(), elementSelector, null, children);
-
-    return (Element[]) children.toArray(new Element[children.size()]);
+    List<Element> children = new ArrayList<>();
+    selectChild(node.getFirstChild(), children);
+    return children.toArray(new Element[children.size()]);
   }
-
 
 
   /**
@@ -954,31 +954,22 @@ public class Util
   public static Element[]
   selectElements(Node node, ExpandedName[] path)
   {
-    List	result = new ArrayList();
-
+    List<Element> result = new ArrayList<>();
     selectElements(node, path, 0, result);
-
-    return (Element[]) result.toArray(new Element[0]);
+    return result.toArray(new Element[0]);
   }
 
 
 
   private static void
-  selectElements(Node node, ExpandedName[] path, int position, List result)
+  selectElements(Node node, ExpandedName[] path, int position, List<Element> result)
   {
     if (position == path.length)
     {
       return;
     }
 
-    Node[]	children =
-      selectChildren
-      (
-        node,
-        path[position].namespaceURI,
-        path[position].localName
-      );
-
+    Node[] children = selectChildren(node, path[position].namespaceURI, path[position].localName);
     for (int i = 0; i < children.length; ++i)
     {
       if (position < path.length - 1)

@@ -28,7 +28,7 @@ public class CSSToXSLFO
      */
     public static void convert(URL in, OutputStream out, URL userAgentStyleSheet) throws IOException, CSSToXSLFOException
     {
-        convert(in.openStream(), out, in, userAgentStyleSheet, null, new HashMap(), null, false, false);
+        convert(in.openStream(), out, in, userAgentStyleSheet, null, new HashMap<String, String>(), null, false, false);
     }
 
     public static void convert(InputStream in, OutputStream out) throws IOException, CSSToXSLFOException
@@ -38,7 +38,7 @@ public class CSSToXSLFO
 
     public static void convert(InputStream in, OutputStream out, URL userAgentStyleSheet) throws IOException, CSSToXSLFOException
     {
-        convert(in, out, null, userAgentStyleSheet, null, new HashMap(), null, false, false);
+        convert(in, out, null, userAgentStyleSheet, null, new HashMap<String, String>(), null, false, false);
     }
 
     public static void convert(
@@ -90,7 +90,7 @@ public class CSSToXSLFO
         URL catalog = null;
         boolean debug = false;
         String filename = null;
-        Map parameters = new HashMap();
+        Map<String, String> parameters = new HashMap<>();
         URL[] preprocessors = null;
         URL url = null;
         URL userAgentStyleSheet = null;

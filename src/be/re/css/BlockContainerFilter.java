@@ -22,40 +22,27 @@ class BlockContainerFilter extends XMLFilterImpl
 
 {
 
-  private final static Set	containerProperties =
-    new HashSet
-    (
-      Arrays.asList
-      (
+  private final static Set<String> containerProperties =
+    new HashSet<>(Arrays.asList(
         new String[]
         {
           "bottom", "clip", "height", "left", "max-height", "max-width",
             "min-height", "min-width", "orientation", "overflow", "position",
             "right", "top", "width", "z-index"
-        }
-      )
-    );
-  private final static Set	triggeringBlockProperties =
-    new HashSet
-    (
-      Arrays.asList
-      (
+        }));
+  private final static Set<String> triggeringBlockProperties =
+    new HashSet<>(Arrays.asList(
         new String[]
         {
           "clip", "height", "max-height", "max-width", "min-height",
             "min-width", "orientation", "overflow", "width", "z-index"
-        }
-      )
-    );
-  private Stack		stack = new Stack();
+        }));
+  private final Stack<Boolean> stack = new Stack<>();
 
-
-
+  
   BlockContainerFilter()
   {
   }
-
-
 
   BlockContainerFilter(XMLReader parent)
   {
@@ -70,7 +57,7 @@ class BlockContainerFilter extends XMLFilterImpl
   {
     super.endElement(namespaceURI, localName, qName);
 
-    if (stack.pop().equals(new Boolean(true)))
+    if (stack.pop().equals(true))
     {
       super.endElement(Constants.XSLFO, "block", "fo:block");
       super.
@@ -194,7 +181,7 @@ class BlockContainerFilter extends XMLFilterImpl
       wrap ? selectAttributes(atts, false) : atts
     );
 
-    stack.push(new Boolean(wrap));
+    stack.push(wrap);
   }
 
 } // BlockContainerFilter

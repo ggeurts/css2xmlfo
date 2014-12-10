@@ -289,7 +289,7 @@ public class Matcher implements ContentHandler
      */
     public SortedSet<Rule> matchingRules()
     {
-        SortedSet result = new TreeSet(new RuleComparator());
+        SortedSet<Rule> result = new TreeSet<Rule>(new RuleComparator());
         for (Compiled.DFAState state : elements.peek().states)
         {
             result.addAll(state.rules);

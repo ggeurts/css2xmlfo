@@ -20,7 +20,7 @@ class ForeignFilter extends XMLFilterImpl
 
 {
 
-  private Stack	stack = new Stack();
+  private Stack<Boolean> stack = new Stack<>();
 
 
 
@@ -41,9 +41,8 @@ class ForeignFilter extends XMLFilterImpl
   endElement(String namespaceURI, String localName, String qName)
     throws SAXException
   {
-    boolean	foreign = ((Boolean) stack.pop()).booleanValue();
-    boolean	foreignParent =
-      !stack.isEmpty() && ((Boolean) stack.peek()).booleanValue();
+    boolean	foreign = stack.pop();
+    boolean	foreignParent = !stack.isEmpty() && stack.peek();
 
     super.endElement(namespaceURI, localName, qName);
 
@@ -98,11 +97,8 @@ class ForeignFilter extends XMLFilterImpl
     Attributes	atts
   ) throws SAXException
   {
-    boolean	foreignParent =
-      !stack.isEmpty() && ((Boolean) stack.peek()).booleanValue();
-    boolean	foreign =
-      foreignParent ||
-        "foreign".equals(atts.getValue(Constants.CSS, "display"));
+    boolean	foreignParent = !stack.isEmpty() && stack.peek();
+    boolean	foreign = foreignParent || "foreign".equals(atts.getValue(Constants.CSS, "display"));
 
     if (!foreignParent && foreign)
     {
@@ -115,7 +111,7 @@ class ForeignFilter extends XMLFilterImpl
       );
     }
 
-    stack.push(new Boolean(foreign));
+    stack.push(foreign);
 
     super.startElement
     (

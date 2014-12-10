@@ -18,10 +18,10 @@ public class BalanceChecker extends XMLFilterImpl
 
 {
 
-  private Stack		elements = new Stack();
-  private File		file;
-  private int		indent = 0;
-  private PrintStream	out;
+  private final Stack<ExpandedName> elements = new Stack<>();
+  private File file;
+  private int indent = 0;
+  private PrintStream out;
 
 
 
@@ -71,7 +71,7 @@ public class BalanceChecker extends XMLFilterImpl
     }
     else
     {
-      ExpandedName	name = (ExpandedName) elements.pop();
+      ExpandedName	name = elements.pop();
 
       if (!name.equals(element))
       {
@@ -129,7 +129,7 @@ public class BalanceChecker extends XMLFilterImpl
   {
     openWriter();
 
-    ExpandedName	name = new ExpandedName(namespaceURI, localName);
+    ExpandedName name = new ExpandedName(namespaceURI, localName);
 
     write("<" + name.toString() + ">");
     indent += 2;

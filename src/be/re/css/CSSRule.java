@@ -121,7 +121,7 @@ public class CSSRule
         return properties.get(0);
     }
 
-    private static void getPseudoClassConditions(Condition c, List result)
+    private static void getPseudoClassConditions(Condition c, List<String> result)
     {
         if (c.getConditionType() == Condition.SAC_PSEUDO_CLASS_CONDITION)
         {
@@ -155,8 +155,7 @@ public class CSSRule
                 && selectorChain[selectorChain.length - 2].getSelectorType()
                 == Selector.SAC_CONDITIONAL_SELECTOR)
         {
-            List conditions = new ArrayList();
-
+            List<String> conditions = new ArrayList<>();
             getPseudoClassConditions(
                     ((ConditionalSelector) selectorChain[selectorChain.length - 2]).getCondition(),
                     conditions

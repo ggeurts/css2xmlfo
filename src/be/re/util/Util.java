@@ -80,20 +80,14 @@ public class Util
       {"dd-MM-yyyy", "2"}
     };
 
-  private static Map		bundles = new HashMap();
-  private static Set		countries =
-    new HashSet(Arrays.asList(Locale.getISOCountries()));
-  private static Set		languages =
-    new HashSet(Arrays.asList(Locale.getISOLanguages()));
-  private static Pattern	timeZonePattern =
-    Pattern.compile("\\p{Digit}{2}:?\\p{Digit}{2}");
-  private static Pattern	timestampPattern =
-    Pattern.compile
-    (
-      "\\p{Digit}{4}(-\\p{Digit}{2}(-\\p{Digit}{2}" +
+  private final static Map<Locale, ResourceBundle> bundles = new HashMap<>();
+  private final static Set<String> countries = new HashSet<>(Arrays.asList(Locale.getISOCountries()));
+  private final static Set<String> languages = new HashSet<>(Arrays.asList(Locale.getISOLanguages()));
+  private final static Pattern timeZonePattern = Pattern.compile("\\p{Digit}{2}:?\\p{Digit}{2}");
+  private final static Pattern timestampPattern = Pattern.compile(
+        "\\p{Digit}{4}(-\\p{Digit}{2}(-\\p{Digit}{2}" +
         "(T\\p{Digit}{2}:\\p{Digit}{2}(:\\p{Digit}{2}(.(\\p{Digit})+)?)?" +
-        "(Z|((\\+|-)\\p{Digit}{2}:?\\p{Digit}{2}))?)?)?)?"
-    );
+        "(Z|((\\+|-)\\p{Digit}{2}:?\\p{Digit}{2}))?)?)?)?");
 
 
 
@@ -126,32 +120,6 @@ public class Util
   {
     return new SimpleDateFormat("yyyy-MM-dd").format(new Date(time));
   }
-
-
-
-  public static Object[]
-  createSet(Object[] collection)
-  {
-    Set	set = new HashSet();
-
-    for (int i = 0; i < collection.length; ++i)
-    {
-      set.add(collection[i]);
-    }
-
-    return
-      set.toArray
-      (
-        (Object[])
-          Array.newInstance
-          (
-            collection.getClass().getComponentType(),
-            set.size()
-          )
-      );
-  }
-
-
 
   public static String
   createTimestamp(long time)
@@ -396,7 +364,7 @@ public class Util
   public static ResourceBundle
   getResourceBundle(Locale locale)
   {
-    ResourceBundle	bundle = (ResourceBundle) bundles.get(locale);
+    ResourceBundle	bundle = bundles.get(locale);
 
     if (bundle == null)
     {
@@ -931,9 +899,9 @@ public class Util
   public static String[]
   readLineConfig(BufferedReader in) throws IOException
   {
-    String	line = "";
-    List	result = new ArrayList();
-    String	s;
+    String line = "";
+    List<String> result = new ArrayList<>();
+    String s;
 
     while ((s = in.readLine()) != null)
     {
@@ -959,7 +927,7 @@ public class Util
       }
     }
 
-    return (String[]) result.toArray(new String[result.size()]);
+    return result.toArray(new String[result.size()]);
   }
 
 
@@ -983,8 +951,8 @@ public class Util
   public static String[]
   split(String s, String separator)
   {
-    List		result = new ArrayList();
-    StringTokenizer	tokenizer = new StringTokenizer(s, separator);
+    List<String> result = new ArrayList<>();
+    StringTokenizer tokenizer = new StringTokenizer(s, separator);
 
     while (tokenizer.hasMoreTokens())
     {
@@ -996,7 +964,7 @@ public class Util
       }
     }
 
-    return (String[]) result.toArray(new String[0]);
+    return result.toArray(new String[result.size()]);
   }
 
 

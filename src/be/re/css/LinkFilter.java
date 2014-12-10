@@ -25,7 +25,7 @@ class LinkFilter extends XMLFilterImpl
   private static final int	NO_LINK = 2;
 
   private URL	baseUrl;
-  private Stack	elements = new Stack();
+  private final Stack<Element> elements = new Stack<>();
 
 
 
@@ -50,7 +50,7 @@ class LinkFilter extends XMLFilterImpl
   {
     super.endElement(namespaceURI, localName, qName);
 
-    int	linkType = ((Element) elements.pop()).linkType;
+    int	linkType = elements.pop().linkType;
 
     if (linkType != NO_LINK)
     {
@@ -70,15 +70,12 @@ class LinkFilter extends XMLFilterImpl
 
     try
     {
-      ((Element) elements.peek()).baseUrl =
-        base != null ?
-          new URL(base) :
-          (
-            elements.size() == 1 ?
-              baseUrl : ((Element) elements.get(elements.size() - 2)).baseUrl
-          );
+      elements.peek().baseUrl = base != null 
+            ? new URL(base) 
+            : elements.size() == 1 
+                    ? baseUrl 
+                    : elements.get(elements.size() - 2).baseUrl;
     }
-
     catch (MalformedURLException e)
     {
       throw new SAXException(e);

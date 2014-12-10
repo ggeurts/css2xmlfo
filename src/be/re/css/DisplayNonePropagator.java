@@ -21,7 +21,7 @@ class DisplayNonePropagator extends XMLFilterImpl
 
 {
 
-  private Stack	stack = new Stack();
+  private Stack<Boolean> stack = new Stack<>();
 
 
 
@@ -58,13 +58,13 @@ class DisplayNonePropagator extends XMLFilterImpl
   ) throws SAXException
   {
     boolean	displayNone =
-      (stack.isEmpty() ? false : ((Boolean) stack.peek()).booleanValue()) ||
+      (stack.isEmpty() ? false : stack.peek()) ||
         (
           "none".equals(atts.getValue(Constants.CSS, "display")) &&
             atts.getValue(Constants.CSS, "region") == null
         );
 
-    stack.push(new Boolean(displayNone));
+    stack.push(displayNone);
 
     if (displayNone)
     {

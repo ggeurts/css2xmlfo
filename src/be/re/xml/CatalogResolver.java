@@ -59,9 +59,9 @@ public class CatalogResolver implements EntityResolver, XMLResolver
       {{DQ2, 0}, {TYP, 1}, {DQ2, 0}, {DQ2, 0}, {ERR, 0}, {ERR, 0}}  // DQ2
     };
 
-  private String	catalogSystemId;
-  private Map		publicIdentifiers = new HashMap();
-  private Map		systemIdentifiers = new HashMap();
+  private String catalogSystemId;
+  private final Map<String, String> publicIdentifiers = new HashMap<>();
+  private final Map<String, String> systemIdentifiers = new HashMap<>();
 
 
 
@@ -260,7 +260,7 @@ public class CatalogResolver implements EntityResolver, XMLResolver
 
       if (next[1] == 1)
       {
-        Map	map;
+        Map<String, String> map;
 
         switch (state)
         {
@@ -313,10 +313,10 @@ public class CatalogResolver implements EntityResolver, XMLResolver
   {
     InputSource	result =
       publicId != null && publicIdentifiers.get(publicId) != null ?
-        new InputSource(publicIdentifiers.get(publicId).toString()) :
+        new InputSource(publicIdentifiers.get(publicId)) :
         (
           systemId != null && systemIdentifiers.get(systemId) != null ?
-            new InputSource(systemIdentifiers.get(systemId).toString()) : null
+            new InputSource(systemIdentifiers.get(systemId)) : null
         );
 
     if (result != null)
@@ -344,10 +344,10 @@ public class CatalogResolver implements EntityResolver, XMLResolver
         new StreamSource
         (
           publicId != null && publicIdentifiers.get(publicId) != null ?
-            publicIdentifiers.get(publicId).toString() :
+            publicIdentifiers.get(publicId) :
             (
               systemId != null && systemIdentifiers.get(systemId) != null ?
-                systemIdentifiers.get(systemId).toString() :
+                systemIdentifiers.get(systemId) :
                 (
                   baseURI != null && systemId != null ?
                     resolveSystemId(baseURI, systemId) : null

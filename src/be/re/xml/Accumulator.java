@@ -33,10 +33,10 @@ public class Accumulator extends XMLFilterImpl
   private static final DocumentBuilder	documentBuilder =
     createDocumentBuilder();
 
-  private Node		currentNode = null;
-  private Document	document = null;
-  private Stack		prefixMappings = new Stack();
-  private Result	result = null;
+  private Node currentNode = null;
+  private Document document = null;
+  private final Stack<Map<String, String>> prefixMappings = new Stack<>();
+  private Result result = null;
 
 
 
@@ -160,7 +160,7 @@ public class Accumulator extends XMLFilterImpl
   public void
   endPrefixMapping(String prefix) throws SAXException
   {
-    ((Map) prefixMappings.peek()).remove(prefix);
+    prefixMappings.peek().remove(prefix);
   }
 
 
@@ -304,12 +304,10 @@ public class Accumulator extends XMLFilterImpl
 
 
   private static void
-  setPrefixMappings(Element element, Map mappings)
+  setPrefixMappings(Element element, Map<String, String> mappings)
   {
-    for (Iterator i = mappings.keySet().iterator(); i.hasNext();)
+    for (String prefix : mappings.keySet())
     {
-      String	prefix = (String) i.next();
-
       element.setAttribute
       (
         "".equals(prefix) ? "xmlns" : ("xmlns:" + prefix),
@@ -351,7 +349,7 @@ public class Accumulator extends XMLFilterImpl
     }
 
     currentNode = document;
-    prefixMappings.push(new HashMap());
+    prefixMappings.push(new HashMap<String, String>());
   }
 
 
@@ -370,8 +368,8 @@ public class Accumulator extends XMLFilterImpl
         createElementNS("".equals(namespaceURI) ? null : namespaceURI, qName);
 
     setAttributes(element, atts);
-    setPrefixMappings(element, (Map) prefixMappings.peek());
-    prefixMappings.push(new HashMap());
+    setPrefixMappings(element, prefixMappings.peek());
+    prefixMappings.push(new HashMap<String, String>());
     currentNode.appendChild(element);
     currentNode = element;
   }
@@ -381,7 +379,7 @@ public class Accumulator extends XMLFilterImpl
   public void
   startPrefixMapping(String prefix, String uri) throws SAXException
   {
-    ((Map) prefixMappings.peek()).put(prefix, uri);
+    prefixMappings.peek().put(prefix, uri);
   }
 
 

@@ -6,6 +6,7 @@ import be.re.xml.sax.FilterOfFilters;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -249,8 +250,8 @@ class PageSetupFilter extends XMLFilterImpl
         moveBodyProperties(atts, bodyRegionAttributes);
         super.startElement(Constants.CSS, "page", "css:page", atts);
 
-        List extents = new ArrayList();
-        Set generated = new HashSet();
+        List<org.w3c.dom.Element> extents = new ArrayList<>();
+        Set<String> generated = new HashSet<>();
         String name = atts.getValue(Constants.CSS, "name");
         String[] inheritedPages = getInheritanceTableEntry(regionInheritanceTable, name);
         String[] pages = new String[inheritedPages.length + 1];
@@ -311,12 +312,10 @@ class PageSetupFilter extends XMLFilterImpl
         // The region order matters.
         generateBodyRegionExtent(atts, bodyRegionAttributes);
 
-        for (Iterator j = sortExtents(extents).iterator(); j.hasNext();)
+        sortExtents(extents);
+        for (org.w3c.dom.Element extent : extents)
         {
-            DOMToContentHandler.elementToContentHandler(
-                    (org.w3c.dom.Element) j.next(),
-                    getContentHandler()
-            );
+            DOMToContentHandler.elementToContentHandler(extent, getContentHandler());
         }
 
         super.endElement(Constants.CSS, "page", "css:page");
@@ -351,7 +350,7 @@ class PageSetupFilter extends XMLFilterImpl
 
         if (context.regions.size() > 0)
         {
-            Set generated = new HashSet();
+            Set<String> generated = new HashSet<>();
             String[] regionNames = new String[]
             {
                 "top", "bottom", "left", "right"
@@ -399,7 +398,7 @@ class PageSetupFilter extends XMLFilterImpl
         {
             if (table[i][0].equals(symbolic))
             {
-                List result = new ArrayList();
+                List<String> result = new ArrayList<>();
 
                 for (int j = 0; j < table[i].length - 1; ++j)
                 {
@@ -417,7 +416,7 @@ class PageSetupFilter extends XMLFilterImpl
                     }
                 }
 
-                return (String[]) result.toArray(new String[0]);
+                return result.toArray(new String[result.size()]);
             }
         }
 
@@ -568,7 +567,7 @@ class PageSetupFilter extends XMLFilterImpl
      */
     private static Map<String, CSSPageRule> recomposePageRules(Iterable<CSSPageRule> pageRules)
     {
-        Map<String, CSSPageRule> result = new HashMap();
+        Map<String, CSSPageRule> result = new HashMap<>();
 
         for (CSSPageRule pageRule : pageRules)
         {
@@ -629,7 +628,7 @@ class PageSetupFilter extends XMLFilterImpl
         };
 
         List<CSSPageRule> result = new ArrayList<>(pageRules);
-        result.sort(ruleComparator);
+        Collections.sort(result, ruleComparator);
         return result;
     }
     
@@ -707,21 +706,18 @@ class PageSetupFilter extends XMLFilterImpl
         return ((Element) elements.peek()).inBodyRegion;
     }
 
-    private static Collection sortExtents(Collection extents)
+    private static void sortExtents(List<org.w3c.dom.Element> extents)
     {
-        Collection result = new TreeSet(new Comparator()
+        Comparator<org.w3c.dom.Element> extentComparator = new Comparator<org.w3c.dom.Element>()
         {
             @Override
-            public int compare(Object o1, Object o2)
+            public int compare(org.w3c.dom.Element o1, org.w3c.dom.Element o2)
             {
-                return Util.indexOf(extentOrder, ((Node) o1).getLocalName())
-                        - Util.indexOf(extentOrder, ((Node) o2).getLocalName());
+                return Util.indexOf(extentOrder, o1.getLocalName())
+                        - Util.indexOf(extentOrder, o2.getLocalName());
             }
-        });
-
-        result.addAll(extents);
-
-        return result;
+        };
+        Collections.sort(extents, extentComparator);
     }
 
     @Override

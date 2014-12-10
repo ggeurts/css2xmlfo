@@ -216,7 +216,7 @@ public class Compiled implements Cloneable
 
         out.println(String.valueOf(state.state) + ":");
 
-        List values = new ArrayList();
+        List<DFAState> values = new ArrayList<>();
 
         for (Event event : state.events.keySet())
         {

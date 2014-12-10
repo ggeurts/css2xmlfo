@@ -5,7 +5,6 @@ import be.re.xml.DOMToContentHandler;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
@@ -27,21 +26,15 @@ class FOMarkerFilter extends XMLFilterImpl
 
 {
 
-  private static final Set		allowedPlaces =
-    new HashSet
-    (
-      Arrays.asList
-      (
+  private static final Set<String> allowedPlaces = new HashSet<>(Arrays.asList(
         new String[]
         {
           "block", "inline", "list-item", "table", "table-cell",
             "table-footer-group", "table-header-group", "table-row-group"
-        }
-      )
-    );
+        }));
 
-  private List	foMarkers = new ArrayList();
-  private Stack	stack = new Stack();
+  private final List<Element> foMarkers = new ArrayList<>();
+  private final Stack<String> stack = new Stack<>();
 
 
 
@@ -102,15 +95,11 @@ class FOMarkerFilter extends XMLFilterImpl
   {
     if (foMarkers.size() > 0)
     {
-      for (Iterator i = foMarkers.iterator(); i.hasNext();)
-      {
-        Element	element = (Element) i.next();
-
-        DOMToContentHandler.
-          elementToContentHandler(element, getContentHandler());
-      }
-
-      foMarkers.clear();
+        for (Element element : foMarkers)
+        {
+            DOMToContentHandler.elementToContentHandler(element, getContentHandler());
+        }
+        foMarkers.clear();
     }
   }
 
@@ -125,7 +114,7 @@ class FOMarkerFilter extends XMLFilterImpl
     Attributes	atts
   ) throws SAXException
   {
-    String	parentDisplay = stack.isEmpty() ? null : (String) stack.peek();
+    String	parentDisplay = stack.isEmpty() ? null : stack.peek();
 
     if
     (

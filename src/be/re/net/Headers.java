@@ -18,7 +18,7 @@ public class Headers
 
 {
 
-  private List	headers = new ArrayList();
+  private final List<Header> headers = new ArrayList<>();
 
 
 
@@ -71,19 +71,17 @@ public class Headers
   public String[]
   get(String name)
   {
-    List	values = new ArrayList();
+    List<String> values = new ArrayList<>();
 
-    for (Iterator i = headers.iterator(); i.hasNext();)
+    for (Header header : headers)
     {
-      Header	tuple = (Header) i.next();
-
-      if (tuple.name.equalsIgnoreCase(name))
+      if (header.name.equalsIgnoreCase(name))
       {
-        values.add(tuple.value);
+        values.add(header.value);
       }
     }
 
-    return (String[]) values.toArray(new String[values.size()]);
+    return values.toArray(new String[values.size()]);
   }
 
 
@@ -110,15 +108,13 @@ public class Headers
   public String[]
   getValuesFromList(String name)
   {
-    List	values = new ArrayList();
+    List<String> values = new ArrayList<>();
 
-    for (Iterator i = headers.iterator(); i.hasNext();)
+    for (Header header : headers)
     {
-      Header	tuple = (Header) i.next();
-
-      if (tuple.name.equalsIgnoreCase(name))
+      if (header.name.equalsIgnoreCase(name))
       {
-        StringTokenizer	tokenizer = new StringTokenizer(tuple.value, ",");
+        StringTokenizer	tokenizer = new StringTokenizer(header.value, ",");
 
         while (tokenizer.hasMoreTokens())
         {
@@ -127,7 +123,7 @@ public class Headers
       }
     }
 
-    return (String[]) values.toArray(new String[values.size()]);
+    return values.toArray(new String[values.size()]);
   }
 
 

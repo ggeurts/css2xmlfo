@@ -21,190 +21,149 @@ class InvalidPropertyFilter extends XMLFilterImpl
 
 {
 
-  private final static Set	after =
-    new HashSet(Arrays.asList(new String[]{"change-bar-class", "content"}));
-  private final static Set	alwaysValid =
-    new HashSet
-    (
-      Arrays.asList
-      (
-        new String[]
+  private final static Set<String> after = new HashSet<>(Arrays.asList(new String[]
         {
-          "background-attachment",
-          "background-color",
-          "background-image",
-          "background-repeat",
-          "border-top-color",
-          "border-right-color",
-          "border-bottom-color",
-          "border-left-color",
-          "border-top-style",
-          "border-right-style",
-          "border-bottom-style",
-          "border-left-style",
-          "border-top-width",
-          "border-right-width",
-          "border-bottom-width",
-          "border-left-width",
-          "color",
-          "counter-increment",
-          "counter-reset",
-          "direction",
-          "display",
-          "font",
-          "font-family",
-          "font-size",
-          "font-size-adjust",
-          "font-stretch",
-          "font-style",
-          "font-variant",
-          "font-weight",
-          "letter-spacing",
-          "line-height",
-          "margin-top",
-          "margin-right",
-          "margin-bottom",
-          "margin-left",
-          "padding-top",
-          "padding-right",
-          "padding-bottom",
-          "padding-left",
-          "position",
-          "quotes",
-          "region",
-          "string-set",
-          "text-decoration",
-          "text-shadow",
-          "text-transform",
-          "unicode-bidi",
-          "visibility",
-          "word-spacing",
-          // Internal attributes.
-          "has-first-letter",
-          "has-markers",
-          "list-label-width"
-        }
-      )
-    );
-  private final static Set	before =
-    new HashSet
-    (
-      Arrays.asList
-      (
-        new String[]
+            "change-bar-class", 
+            "content"
+        }));
+  private final static Set<String> alwaysValid = new HashSet<>(Arrays.asList(new String[]
         {
-          "change-bar-class", "change-bar-color", "change-bar-offset",
+            "background-attachment",
+            "background-color",
+            "background-image",
+            "background-repeat",
+            "border-top-color",
+            "border-right-color",
+            "border-bottom-color",
+            "border-left-color",
+            "border-top-style",
+            "border-right-style",
+            "border-bottom-style",
+            "border-left-style",
+            "border-top-width",
+            "border-right-width",
+            "border-bottom-width",
+            "border-left-width",
+            "color",
+            "counter-increment",
+            "counter-reset",
+            "direction",
+            "display",
+            "font",
+            "font-family",
+            "font-size",
+            "font-size-adjust",
+            "font-stretch",
+            "font-style",
+            "font-variant",
+            "font-weight",
+            "letter-spacing",
+            "line-height",
+            "margin-top",
+            "margin-right",
+            "margin-bottom",
+            "margin-left",
+            "padding-top",
+            "padding-right",
+            "padding-bottom",
+            "padding-left",
+            "position",
+            "quotes",
+            "region",
+            "string-set",
+            "text-decoration",
+            "text-shadow",
+            "text-transform",
+            "unicode-bidi",
+            "visibility",
+            "word-spacing",
+            // Internal attributes.
+            "has-first-letter",
+            "has-markers",
+            "list-label-width"
+        }));
+  private final static Set<String> before = new HashSet<>(Arrays.asList(new String[]
+        {
+            "change-bar-class", "change-bar-color", "change-bar-offset",
             "change-bar-placement", "change-bar-style", "change-bar-width",
             "content"
-        }
-      )
-    );
-  private final static Set	blockLevel =
-    new HashSet
-    (
-      Arrays.asList
-      (
-        new String[]
+        }));
+  private final static Set<String> blockLevel = new HashSet<>(Arrays.asList(new String[]
         {
-          "anchor", "background-position", "clear", "clip", "hyphenate",
+            "anchor", "background-position", "clear", "clip", "hyphenate",
             "link", "orphans", "overflow", "page", "page-break-after",
             "page-break-before", "page-break-inside", "text-align",
             "text-align-last", "text-indent", "white-space", "widows"
-        }
-      )
-    );
-  private final static Set	blockLevelNotTable =
-    new HashSet(Arrays.asList(new String[]{"column-span"}));
-  private final static Set	blockOrTableOrTableCell =
-    new HashSet(Arrays.asList(new String[]{"orientation"}));
-  private final static Set	graphic =
-    new HashSet
-    (
-      Arrays.asList
-      (
-        new String[]
+        }));
+  private final static Set<String> blockLevelNotTable = new HashSet<>(Arrays.asList(new String[]
         {
-          "background-position", "content-height", "content-type",
+            "column-span"
+        }));
+  private final static Set<String> blockOrTableOrTableCell = new HashSet<>(Arrays.asList(new String[]
+        {
+            "orientation"
+        }));
+  private final static Set<String> graphic = new HashSet<>(Arrays.asList(new String[] 
+        {
+            "background-position", "content-height", "content-type",
             "content-width", "height", "max-height", "max-width", "min-height",
             "min-width", "overflow", "scaling", "scaling-method", "src", "width"
-        }
-      )
-    );
-  private final static Set	inline =
-    new HashSet
-    (
-      Arrays.
-        asList(new String[]{"anchor", "hyphenate", "link", "vertical-align"})
-    );
-  private final static Set	leader =
-    new HashSet
-    (
-      Arrays.asList
-      (
-        new String[]
+        }));
+  private final static Set<String> inline = new HashSet<>(Arrays.asList(new String[]
         {
-          "leader-alignment", "leader-length", "leader-pattern",
+            "anchor", 
+            "hyphenate", 
+            "link", 
+            "vertical-align"
+        }));
+  private final static Set<String> leader = new HashSet<>(Arrays.asList(new String[]
+        {
+            "leader-alignment", "leader-length", "leader-pattern",
             "leader-pattern-width", "rule-thickness"
-        }
-      )
-    );
-  private final static Set	listItem =
-    new HashSet
-    (
-      Arrays.asList
-      (
-        new String[]
+        }));
+  private final static Set<String> listItem = new HashSet<>(Arrays.asList(new String[]
         {
-          "list-style", "list-style-image", "list-style-position",
+            "list-style", "list-style-image", "list-style-position",
             "list-style-type"
-        }
-      )
-    );
-  private final static Set	marker =
-    new HashSet(Arrays.asList(new String[]{"marker-offset"}));
-  private final static Set	notInlineOrTable =
-    new HashSet
-    (
-      Arrays.asList
-      (
-        new String[]{"max-height", "max-width", "min-height", "min-width"}
-      )
-    );
-  private final static Set	notInlineOrTableColumnOrColumnGroup =
-    new HashSet(Arrays.asList(new String[]{"height"}));
-  private final static Set	notInlineOrTableRowOrRowGroup =
-    new HashSet(Arrays.asList(new String[]{"width"}));
-  private final static Set	notPositioned =
-    new HashSet(Arrays.asList(new String[]{"float"}));
-  private final static Set	positioned =
-    new HashSet
-    (
-      Arrays.asList(new String[]{"bottom", "left", "right", "top", "z-index"})
-    );
-  private final static Set	table =
-    new HashSet
-    (
-      Arrays.asList
-      (
-        new String[]
+        }));
+  private final static Set<String> marker = new HashSet<>(Arrays.asList(new String[]
         {
-          "border-collapse", "border-spacing", "caption-side", "empty-cells",
+            "marker-offset"
+        }));
+  private final static Set notInlineOrTable = new HashSet<>(Arrays.asList(new String[]
+        {
+            "max-height", "max-width", "min-height", "min-width"
+        }));
+  private final static Set<String> notInlineOrTableColumnOrColumnGroup = new HashSet<>(Arrays.asList(new String[]
+        {
+            "height"
+        }));
+  private final static Set<String> notInlineOrTableRowOrRowGroup = new HashSet<>(Arrays.asList(new String[]
+        {
+            "width"
+        }));
+  private final static Set<String> notPositioned = new HashSet<>(Arrays.asList(new String[]
+        {
+            "float"
+        }));
+  private final static Set<String> positioned = new HashSet<>(Arrays.asList(new String[]
+        {
+            "bottom", "left", "right", "top", "z-index"
+        }));
+  private final static Set<String> table = new HashSet<>(Arrays.asList(new String[]
+        {
+            "border-collapse", "border-spacing", "caption-side", "empty-cells",
             "table-layout", "table-omit-footer-at-break",
             "table-omit-header-at-break"
-        }
-      )
-    );
-  private final static Set	tableCaption =
-    new HashSet(Arrays.asList(new String[]{"caption-side"}));
-  private final static Set	tableCell =
-    new HashSet
-    (
-      Arrays.asList
-      (
-        new String[]{"colspan", "empty-cells", "rowspan", "vertical-align"}
-      )
-    );
-
+        }));
+  private final static Set<String> tableCaption = new HashSet<>(Arrays.asList(new String[]
+        {
+            "caption-side"
+        }));
+  private final static Set<String> tableCell = new HashSet<>(Arrays.asList(new String[]
+        {
+            "colspan", "empty-cells", "rowspan", "vertical-align"
+        }));
 
 
   InvalidPropertyFilter()

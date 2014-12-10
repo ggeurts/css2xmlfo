@@ -14,9 +14,9 @@ public class Util
 
 {
 
-  private static ResourceBundle	bundle = null;
-  private static boolean	deleteOnExitHookAdded = false;
-  private static final Set	dirsToDelete = new HashSet();
+  private static ResourceBundle bundle = null;
+  private static boolean deleteOnExitHookAdded = false;
+  private static final Set<File> dirsToDelete = new HashSet<>();
 
 
 
@@ -149,9 +149,9 @@ public class Util
             {
               synchronized (dirsToDelete)
               {
-                for (Iterator i = dirsToDelete.iterator(); i.hasNext();)
+                for (File dir : dirsToDelete)
                 {
-                  deleteDir((File) i.next());
+                  deleteDir(dir);
                 }
               }
             }

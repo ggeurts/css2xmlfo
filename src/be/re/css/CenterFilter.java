@@ -19,7 +19,7 @@ class CenterFilter extends XMLFilterImpl
 
 {
 
-  private Stack	stack = new Stack();
+  private final Stack<Boolean> stack = new Stack<>();
 
 
 
@@ -93,7 +93,7 @@ class CenterFilter extends XMLFilterImpl
   {
     super.endElement(namespaceURI, localName, qName);
 
-    if (((Boolean) stack.pop()).booleanValue())
+    if (stack.pop())
     {
       super.endElement(Constants.CSS, "table-cell", "css:table-cell");
       emptyCell();
@@ -207,7 +207,7 @@ class CenterFilter extends XMLFilterImpl
       );
     }
 
-    stack.push(new Boolean(extra));
+    stack.push(extra);
     super.startElement(namespaceURI, localName, qName, atts);
   }
 

@@ -78,11 +78,11 @@ class FirstLetterFilter extends XMLFilterImpl
 
 
 
-  private static Map
+  private static Map<String, String>
   getOriginalProperties(Element firstLetter)
   {
-    NamedNodeMap	attributes = firstLetter.getAttributes();
-    Map			result = new HashMap();
+    NamedNodeMap attributes = firstLetter.getAttributes();
+    Map<String, String> result = new HashMap<>();
 
     for (int i = 0; i < attributes.getLength(); ++i)
     {
@@ -153,29 +153,22 @@ class FirstLetterFilter extends XMLFilterImpl
 
 
   private static void
-  removeOriginalProperties(Element element, Map properties)
+  removeOriginalProperties(Element element, Map<String, String> properties)
   {
-    for (Iterator i = properties.keySet().iterator(); i.hasNext();)
+    for (String localName : properties.keySet())
     {
-      element.removeAttributeNS(Constants.CSS, (String) i.next());
+      element.removeAttributeNS(Constants.CSS, localName);
     }
   }
 
 
 
   private static void
-  setOriginalProperties(Element element, Map properties)
+  setOriginalProperties(Element element, Map<String, String> properties)
   {
-    for (Iterator i = properties.keySet().iterator(); i.hasNext();)
+    for (String localName : properties.keySet())
     {
-      String	localName = (String) i.next();
-
-      element.setAttributeNS
-      (
-        Constants.CSS,
-        "css:" + localName,
-        (String) properties.get(localName)
-      );
+      element.setAttributeNS(Constants.CSS, "css:" + localName, properties.get(localName));
     }
   }
 
@@ -259,7 +252,7 @@ class FirstLetterFilter extends XMLFilterImpl
       return element;
     }
 
-    Map	originalProperties = getOriginalProperties(firstLetter);
+    Map<String, String> originalProperties = getOriginalProperties(firstLetter);
 
     firstLetter.setAttributeNS(Constants.CSS, "css:display", "inline");
 
@@ -323,12 +316,11 @@ class FirstLetterFilter extends XMLFilterImpl
 
 
   private static void
-  wrapInFloat
-  (
-    Element	firstLetter,
-    String	floatValue,
-    String	clearValue,
-    Map		originalProperties
+  wrapInFloat(
+    Element firstLetter,
+    String floatValue,
+    String clearValue,
+    Map<String, String> originalProperties
   )
   {
     Element	block =
@@ -347,8 +339,8 @@ class FirstLetterFilter extends XMLFilterImpl
       floating.setAttributeNS(Constants.CSS, "css:clear", clearValue);
     }
 
-    Map	blockProperties = new HashMap(originalProperties);
-    Map	inlineProperties = new HashMap(originalProperties);
+    Map<String, String> blockProperties = new HashMap<>(originalProperties);
+    Map<String, String> inlineProperties = new HashMap<>(originalProperties);
 
     blockProperties.remove("float");
     blockProperties.remove("clear");

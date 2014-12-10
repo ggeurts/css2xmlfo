@@ -22,8 +22,8 @@ class NormalizeTableFilter extends XMLFilterImpl
 
 {
 
-  private Stack	columnStack = new Stack();
-  private Stack	elementStack = new Stack();
+  private final Stack<List<Attributes>> columnStack = new Stack<>();
+  private final Stack<Element> elementStack = new Stack<>();
 
 
 
@@ -43,15 +43,14 @@ class NormalizeTableFilter extends XMLFilterImpl
   private void
   addColumn(Attributes atts)
   {
-    List	columns = (List) columnStack.peek();
-    int		span = getSpan(atts, "span");
+    List<Attributes> columns = columnStack.peek();
+    int	span = getSpan(atts, "span");
 
     for (int i = 0; i < span; ++i)
     {
-      columns.add(atts);
+        columns.add(atts);
     }
   }
-
 
 
   private void
@@ -63,23 +62,19 @@ class NormalizeTableFilter extends XMLFilterImpl
     {
       int	colSpan = getSpan(element.atts, "colspan");
       Element	group = getGroup();
+      
+      @SuppressWarnings("unchecked")
+      List<Integer> rowContributions = (List<Integer>)group.extra;
 
       for (int i = 1; i < rowSpan; ++i) // For the next rows.
       {
-        if (i == ((List) group.extra).size())
+        if (i == rowContributions.size())
         {
-          ((List) group.extra).add(new Integer(colSpan));
+            rowContributions.add(colSpan);
         }
         else
         {
-          ((List) group.extra).set
-          (
-            i,
-            new Integer
-            (
-              ((Integer) ((List) group.extra).get(i)).intValue() + colSpan
-            )
-          );
+            rowContributions.set(i, rowContributions.get(i) + colSpan);
         }
       }
     }
@@ -92,7 +87,7 @@ class NormalizeTableFilter extends XMLFilterImpl
   {
     if (element.isDisplay(Element.TABLE))
     {
-      columnStack.push(new ArrayList());
+      columnStack.push(new ArrayList<Attributes>());
     }
     else
     {
@@ -106,8 +101,9 @@ class NormalizeTableFilter extends XMLFilterImpl
         {
           if (isGroup(parent) && parent.extra == null)
           {
-            parent.extra = new ArrayList(); // Row seen.
-            ((List) parent.extra).add(new Integer(0));
+            List<Integer> rowContributions = new ArrayList<>();
+            rowContributions.add(0); 
+            parent.extra = rowContributions; // Row seen.
               // No contributions because there is no previous row.
           }
         }
@@ -115,16 +111,11 @@ class NormalizeTableFilter extends XMLFilterImpl
         {
           if (element.isDisplay(Element.TABLE_CELL))
           {
-            int	currentCellCount =
-              parent.extra == null ?
-                0 : ((Integer) parent.extra).intValue();
+            int	currentCellCount = parent.extra == null 
+                    ? 0 
+                    : ((Integer) parent.extra);
 
-            parent.extra =
-              new Integer
-              (
-                currentCellCount +
-                getSpan(element.atts, "colspan")
-              );
+            parent.extra = currentCellCount + getSpan(element.atts, "colspan");
 
             addTableCellRowContributions(element);
           }
@@ -139,7 +130,7 @@ class NormalizeTableFilter extends XMLFilterImpl
   endElement(String namespaceURI, String localName, String qName)
     throws SAXException
   {
-    Element	element = (Element) elementStack.pop();
+    Element	element = elementStack.pop();
 
     if
     (
@@ -155,8 +146,7 @@ class NormalizeTableFilter extends XMLFilterImpl
       return;
     }
 
-    Element	parent =
-      elementStack.empty() ? null : ((Element) elementStack.peek());
+    Element	parent = elementStack.empty() ? null : elementStack.peek();
 
     if (element.isDisplay(Element.TABLE_COLUMN_GROUP))
     {
@@ -203,7 +193,7 @@ class NormalizeTableFilter extends XMLFilterImpl
   {
     for (int i = elementStack.size() - 1; i >= 0; --i)
     {
-      Element	element = (Element) elementStack.get(i);
+      Element	element = elementStack.get(i);
 
       for (int j = 0; j < oneOf.length; ++j)
       {
@@ -230,16 +220,14 @@ class NormalizeTableFilter extends XMLFilterImpl
   private Attributes
   getColumn()
   {
-    List	columns = (List) columnStack.peek();
-    Integer	position = (Integer) ((Element) elementStack.peek()).extra;
+    List<Attributes> columns = columnStack.peek();
+    Integer position = (Integer)elementStack.peek().extra;
 
-    return
-      position == null && columns.size() > 0 ?
-        (Attributes) columns.get(0) :
-        (
-          columns.size() == 0 || position.intValue() >= columns.size() ?
-            null : (Attributes) columns.get(position.intValue())
-        );
+    return position == null && columns.size() > 0 
+            ? columns.get(0) 
+            : columns.isEmpty() || position >= columns.size() 
+                    ? null 
+                    : columns.get(position);
   }
 
 
@@ -468,13 +456,11 @@ class NormalizeTableFilter extends XMLFilterImpl
     Attributes	atts
   ) throws SAXException
   {
-    Element	element =
-      new Element(namespaceURI, localName, qName, atts);
+    Element element = new Element(namespaceURI, localName, qName, atts);
 
     if (!element.isDisplay(Element.TABLE_COLUMN_GROUP))
     {
-      Element	parent =
-        elementStack.empty() ? null : (Element) elementStack.peek();
+      Element parent = elementStack.empty() ? null : elementStack.peek();
 
       if
       (
@@ -493,7 +479,7 @@ class NormalizeTableFilter extends XMLFilterImpl
         )
         {
           synthesizeGroup();
-          parent = (Element) elementStack.peek();
+          parent = elementStack.peek();
         }
         else
         {
@@ -529,32 +515,27 @@ class NormalizeTableFilter extends XMLFilterImpl
   {
     if (element.extra != null)
     {
-      List	columns = (List) columnStack.peek();
-      List	rowContributions = (List) parent.extra;
-        // From group parent.
-      int	contribution =
-        rowContributions.size() > 0 ?
-        //rowContributions != null && rowContributions.size() > 0 ?
-          ((Integer) rowContributions.get(0)).intValue() : 0;
+      List<Attributes> columns = columnStack.peek();
+      @SuppressWarnings("unchecked")
+      List<Integer> rowContributions = (List<Integer>)parent.extra;
+      // From group parent.
+      int contribution = rowContributions.size() > 0 
+              ? rowContributions.get(0) 
+              : 0;
 
       if (rowContributions.size() > 0)
       {
         rowContributions.remove(0);
       }
 
-      if (rowContributions.size() == 0) // No contributions left for next row.
+      if (rowContributions.isEmpty()) // No contributions left for next row.
       {
-        rowContributions.add(new Integer(0));
+        rowContributions.add(0);
       }
 
-      if (((Integer) element.extra).intValue() + contribution < columns.size())
+      if ((Integer)element.extra + contribution < columns.size())
       {
-        for
-        (
-          int i = ((Integer) element.extra).intValue();
-          i < columns.size();
-          ++i
-        )
+        for(int i = (Integer)element.extra; i < columns.size(); ++i)
         {
           super.startElement
           (
@@ -644,7 +625,7 @@ class NormalizeTableFilter extends XMLFilterImpl
     {
       for (int i = 0; i < element.children.size(); ++i)
       {
-        Element		child = (Element) element.children.get(i);
+        Element		child = element.children.get(i);
         Attributes	atts =
           Util.mergeAttributes
           (

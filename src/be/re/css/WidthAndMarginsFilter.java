@@ -20,7 +20,7 @@ class WidthAndMarginsFilter extends XMLFilterImpl
 
 {
 
-  private Stack	stack = new Stack();
+  private final Stack<Attributes> stack = new Stack<>();
 
 
 
@@ -301,21 +301,13 @@ class WidthAndMarginsFilter extends XMLFilterImpl
             (
               // If the parent is a table-cell we leave it (too complicated).
               stack.isEmpty()						 ||
-              !"table-cell".equals
-              (
-                ((Attributes) stack.peek()).
-                  getValue(Constants.CSS, "display")
-              )
+              !"table-cell".equals(stack.peek().getValue(Constants.CSS, "display"))
             )
           )
           {
-            atts =
-              correctBlock
-              (
-                atts,
-                !stack.isEmpty() ?
-                  (Attributes) stack.peek() : new AttributesImpl()
-              );
+            atts = correctBlock(atts, !stack.isEmpty() 
+                    ? stack.peek() 
+                    : new AttributesImpl());
           }
         }
       }
