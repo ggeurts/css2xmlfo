@@ -233,16 +233,12 @@ public class CSSToFOPNew
         }
     }
 
-    private static String[]
-            setDummyInputFile(String[] args) throws Exception
+    private static String[] setDummyInputFile(String[] args) throws Exception
     {
         String[] result = new String[args.length + 2];
-
         System.arraycopy(args, 0, result, 0, args.length);
         result[result.length - 2] = "-fo";
-        result[result.length - 1]
-                = be.re.io.Util.createTempFile("css2fopnew.", null).getAbsolutePath();
-
+        result[result.length - 1] = File.createTempFile("css2fopnew.", null).getAbsolutePath();
         return result;
     }
 

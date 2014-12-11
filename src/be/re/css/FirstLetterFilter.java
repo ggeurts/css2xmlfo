@@ -3,7 +3,6 @@ package be.re.css;
 import be.re.xml.Accumulator;
 import be.re.xml.DOMToContentHandler;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;

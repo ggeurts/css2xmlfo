@@ -286,9 +286,14 @@ class Util
 
     static URL createUrl(String s) throws MalformedURLException
     {
-        return be.re.net.Util.isUrl(s)
-                ? new URL(s) 
-                : be.re.net.Util.fileToUrl(new File(s));
+        try
+        {
+            return new URL(s);
+        }
+        catch (MalformedURLException e)
+        {
+            return new File(s).toURI().toURL();
+        }
     }
 
     static URL[] createUrls(String s) throws MalformedURLException

@@ -360,7 +360,7 @@ class ProjectorFilter extends XMLFilterImpl
             return "";
         }
 
-        Integer value = (Integer) findCounterScope(counter).get(counter.toLowerCase());
+        Integer value = findCounterScope(counter).get(counter.toLowerCase());
         String listStyle = getCounterListStyle(function);
 
         return value != null && !"none".equalsIgnoreCase(listStyle)
@@ -586,7 +586,7 @@ class ProjectorFilter extends XMLFilterImpl
 
     private static String[] getSetNamedStringNames(Iterable<Rule> rules)
     {
-        Set<String> result = new HashSet<String>();
+        Set<String> result = new HashSet<>();
 
         for (Rule rule : rules)
         {
@@ -748,7 +748,7 @@ class ProjectorFilter extends XMLFilterImpl
                 {
                     Map<String, Integer> scope = findCounterScope(i.getStringValue());
 
-                    scope.put(counter, ((Integer) scope.get(i.getStringValue())) +   
+                    scope.put(counter, (scope.get(i.getStringValue())) +   
                             (i.getNextLexicalUnit() != null && i.getNextLexicalUnit().getLexicalUnitType() == LexicalUnit.SAC_INTEGER
                                     ? i.getNextLexicalUnit().getIntegerValue()
                                     : 1));

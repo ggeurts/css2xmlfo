@@ -211,6 +211,7 @@ class InvalidPropertyFilter extends XMLFilterImpl
 
 
 
+  @SuppressWarnings("StringEquality")
   private static boolean
   isValid
   (
