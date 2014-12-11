@@ -5,12 +5,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-import javax.xml.transform.Source;
-import javax.xml.transform.Templates;
 import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.URIResolver;
-import javax.xml.transform.sax.SAXTransformerFactory;
-import javax.xml.transform.stream.StreamSource;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.DTDHandler;
 import org.xml.sax.EntityResolver;
@@ -29,12 +24,10 @@ import org.xml.sax.helpers.XMLFilterImpl;
  */
 public class CSSToXSLFOFilter extends XMLFilterImpl
 {
-    private static SAXTransformerFactory factory;
     private XMLFilterImpl filter;
     private PageSetupFilter pageSetupFilter;
     private Util.PostProjectionFilter postProjectionFilter;
     private ProjectorFilter projectorFilter;
-    private static Templates templates = loadStyleSheet();
     private Map userAgentParameters;
 
     public CSSToXSLFOFilter(CSSToXSLFOFilterFactory factory, URL baseUrl, URL userAgentStyleSheet, Map<String, String> userAgentParameters) throws CSSToXSLFOException
@@ -110,41 +103,6 @@ public class CSSToXSLFOFilter extends XMLFilterImpl
     public URL getUserAgentStyleSheet()
     {
         return projectorFilter.getUserAgentStyleSheet();
-    }
-
-    private static Templates loadStyleSheet()
-    {
-        try
-        {
-            factory = be.re.xml.sax.Util.newSAXTransformerFactory();
-
-            factory.setURIResolver(new URIResolver()
-            {
-                @Override
-                public Source resolve(String href, String base)
-                {
-                    try
-                    {
-                        URL xslUrl = base != null && be.re.net.Util.isUrl(base)
-                                ? new URL(new URL(base), href)
-                                : new URL(CSSToXSLFOFilter.class.getResource("style/css.xsl"), href);
-                        return new StreamSource(xslUrl.openStream());
-                    }
-                    catch (Exception e)
-                    {
-                        return null;
-                    }
-                }
-            });
-
-            return factory.newTemplates(
-                    new StreamSource(
-                            CSSToXSLFOFilter.class.getResource("style/css.xsl").openStream()));
-        } 
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
     }
 
     @Override

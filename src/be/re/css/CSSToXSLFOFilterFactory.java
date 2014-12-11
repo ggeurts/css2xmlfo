@@ -7,6 +7,7 @@ package be.re.css;
 
 import be.re.xml.sax.TransformerHandlerFilter;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
 import javax.xml.transform.Source;
@@ -83,12 +84,14 @@ public class CSSToXSLFOFilterFactory
             {
                 try
                 {
-                    URL xslUrl = base != null && be.re.net.Util.isUrl(base)
-                            ? new URL(new URL(base), href)
-                            : new URL(CSSToXSLFOFilter.class.getResource("style/css.xsl"), href);
+                    URL xslUrl = getXslUrl(href, base);
                     return new StreamSource(xslUrl.openStream());
                 }
-                catch (Exception e)
+                catch (MalformedURLException e)
+                {
+                    return null;
+                }
+                catch (IOException e)
                 {
                     return null;
                 }
@@ -97,6 +100,22 @@ public class CSSToXSLFOFilterFactory
         return result;
     }
 
+    private static URL getXslUrl(String href, String baseUrl) throws MalformedURLException
+    {
+        if (baseUrl != null)
+        {
+            try 
+            {
+                return new URL(new URL(baseUrl), href);
+            }
+            catch (MalformedURLException e)
+            {
+                // NOP
+            }
+        }
+        return new URL(CSSToXSLFOFilter.class.getResource("style/css.xsl"), href);
+    }
+    
     public TransformerHandlerFilter createTransformerHandlerFilter(Map<String, String> userAgentParameters) throws TransformerConfigurationException
     {
         TransformerHandler transformerHandler = transformerFactory.newTransformerHandler(transformerTemplates);
