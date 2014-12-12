@@ -11,10 +11,11 @@ import java.util.Map;
 import org.apache.avalon.framework.configuration.DefaultConfigurationBuilder;
 import org.apache.fop.apps.FOPException;
 import org.apache.fop.apps.FOUserAgent;
+import org.apache.fop.apps.Fop;
 import org.apache.fop.apps.FopFactory;
 import org.apache.fop.cli.CommandLineOptions;
-import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
+import org.xml.sax.XMLFilter;
 
 /**
  * Convenience class for the conversion from CSS to the new FOP XSL-FO
@@ -84,8 +85,10 @@ public class CSSToFOPNew
                 agent = fopFactory.newFOUserAgent();
             }
             
-            ContentHandler handler = fopFactory.newFop(format, agent, out).getDefaultHandler();
-            converter.convert(new InputSource(in), handler, baseUrl, userAgentStyleSheet, parameters, preprocessors);
+            XMLFilter preprocessor = converter.createPreprocessorFilter(preprocessors);
+            Fop fop = fopFactory.newFop(format, agent, out);
+            converter.convert(new InputSource(in), fop.getDefaultHandler(), 
+                    baseUrl, userAgentStyleSheet, parameters, preprocessor, null);
         }
 
         catch (Exception e)

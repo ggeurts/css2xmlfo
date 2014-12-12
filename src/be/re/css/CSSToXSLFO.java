@@ -63,7 +63,8 @@ public class CSSToXSLFO
             TransformerHandler handler = converter.getTransformerFactory().newTransformerHandler();
             handler.setResult(new StreamResult(out));
 
-            converter.convert(source, handler, baseUrl, userAgentStyleSheet, userAgentParameters, preprocessors);
+            XMLFilter preprocessor = converter.createPreprocessorFilter(preprocessors);
+            converter.convert(source, handler, baseUrl, userAgentStyleSheet, userAgentParameters, preprocessor, null);
         }
         catch (SAXException | TransformerConfigurationException | IllegalArgumentException | IOException e)
         {

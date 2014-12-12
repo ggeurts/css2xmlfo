@@ -12,369 +12,310 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.avalon.framework.configuration.Configuration;
+import org.apache.avalon.framework.configuration.DefaultConfigurationBuilder;
+import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLFilter;
 import org.xml.sax.XMLReader;
 
-
-
 /**
  * Convenience class for the conversion from CSS to the Xinc XSL-FO formatter.
+ *
  * @author Werner Donn\u00e9
  */
-
 public class CSSToXinc
 
 {
 
-  public static final int	PDF = 0;
+    public static final int PDF = 0;
 
-
-
-  public static void
-  convert(URL in, OutputStream out, URL userAgentStyleSheet, int format)
-    throws IOException, CSSToXSLFOException
-  {
-    convert
-    (
-      in.openStream(),
-      out,
-      in,
-      userAgentStyleSheet,
-      null,
-      new HashMap(),
-      null,
-      format,
-      false
-    );
-  }
-
-
-
-  public static void
-  convert(InputStream in, OutputStream out, int format)
-    throws IOException, CSSToXSLFOException
-  {
-    convert(in, out, null, format);
-  }
-
-
-
-  public static void
-  convert(InputStream in, OutputStream out, URL userAgentStyleSheet, int format)
-    throws IOException, CSSToXSLFOException
-  {
-    convert
-    (
-      in,
-      out,
-      null,
-      userAgentStyleSheet,
-      null,
-      new HashMap(),
-      null,
-      format,
-      false
-    );
-  }
-
-
-
-  public static void
-  convert
-  (
-    InputStream		in,
-    OutputStream	out,
-    URL			baseUrl,
-    URL			userAgentStyleSheet,
-    URL			catalog,
-    Map			parameters,
-    URL[]		preprocessors,
-    int			format,
-    boolean		validate
-  ) throws IOException, CSSToXSLFOException
-  {
-    convert
-    (
-      in,
-      out,
-      baseUrl,
-      userAgentStyleSheet,
-      catalog,
-      parameters,
-      preprocessors,
-      format,
-      validate,
-      null
-    );
-  }
-
-
-
-  public static void
-  convert
-  (
-    InputStream		in,
-    OutputStream	out,
-    URL			baseUrl,
-    URL			userAgentStyleSheet,
-    URL			catalog,
-    Map			parameters,
-    URL[]		preprocessors,
-    int			format,
-    boolean		validate,
-    URL			configuration
-  ) throws IOException, CSSToXSLFOException
-  {
-    if (format != PDF)
+    public static void
+            convert(URL in, OutputStream out, URL userAgentStyleSheet, int format)
+            throws IOException, CSSToXSLFOException
     {
-      throw
-        new IllegalArgumentException
-        (
-          "be.re.css.CSSToXinc.convert takes only be.re.css.CSSToXinc.PDF " +
-            "as a format value."
+        convert(
+                in.openStream(),
+                out,
+                in,
+                userAgentStyleSheet,
+                null,
+                new HashMap(),
+                null,
+                format,
+                false
         );
     }
 
-    try
+    public static void
+            convert(InputStream in, OutputStream out, int format)
+            throws IOException, CSSToXSLFOException
     {
-      XMLReader	parser = be.re.xml.sax.Util.getParser(catalog, validate);
-      XMLFilter	parent = new ProtectEventHandlerFilter(true, true, parser);
+        convert(in, out, null, format);
+    }
 
-      if (preprocessors != null)
-      {
-        parent = Util.createPreprocessorFilter(preprocessors, parent);
-      }
-
-      XMLFilter	filter =
-        new CSSToXSLFOFilter
-        (
-          baseUrl,
-          userAgentStyleSheet,
-          parameters,
-          parent,
-          System.getProperty("be.re.css.debug") != null
+    public static void
+            convert(InputStream in, OutputStream out, URL userAgentStyleSheet, int format)
+            throws IOException, CSSToXSLFOException
+    {
+        convert(
+                in,
+                out,
+                null,
+                userAgentStyleSheet,
+                null,
+                new HashMap(),
+                null,
+                format,
+                false
         );
+    }
 
-      InputSource	source = new InputSource(in);
+    public static void
+            convert(
+                    InputStream in,
+                    OutputStream out,
+                    URL baseUrl,
+                    URL userAgentStyleSheet,
+                    URL catalog,
+                    Map parameters,
+                    URL[] preprocessors,
+                    int format,
+                    boolean validate
+            ) throws IOException, CSSToXSLFOException
+    {
+        convert(
+                in,
+                out,
+                baseUrl,
+                userAgentStyleSheet,
+                catalog,
+                parameters,
+                preprocessors,
+                format,
+                validate,
+                null
+        );
+    }
 
-      if (baseUrl != null)
-      {
-        source.setSystemId(baseUrl.toString());
-      }
-
-      XincEngine	engine = new XincEngine();
-
-      if (configuration != null)
-      {
-        try
+    public static void
+            convert(
+                    InputStream in,
+                    OutputStream out,
+                    URL baseUrl,
+                    URL userAgentStyleSheet,
+                    URL catalog,
+                    Map parameters,
+                    URL[] preprocessors,
+                    int format,
+                    boolean validate,
+                    URL configuration
+            ) throws IOException, CSSToXSLFOException
+    {
+        if (format != PDF)
         {
-          engine.setConfiguration
-          (
-            be.re.xml.Util.newDocumentBuilderFactory(false).
-              newDocumentBuilder().parse(configuration.toString())
-          );
+            throw new IllegalArgumentException(
+                    "be.re.css.CSSToXinc.convert takes only be.re.css.CSSToXinc.PDF "
+                    + "as a format value."
+            );
         }
 
-        catch (IOException e)
+        try
         {
-          throw e;
+            CSSToXSLFOConverter converter = new CSSToXSLFOConverter(catalog);
+            converter.setValidate(validate);
+            converter.setDebug(System.getProperty("be.re.css.debug") != null);
+            
+            XincEngine engine = new XincEngine();
+            if (configuration != null)
+            {
+		DefaultConfigurationBuilder builder = new DefaultConfigurationBuilder();
+		Configuration config = builder.buildFromFile("xincconfig.xml");
+		engine.setConfiguration(config);
+            }
+
+            engine.setOutputStream(out);
+            XMLFilter preprocessor = converter.createPreprocessorFilter(preprocessors);
+            converter.convert(new InputSource(in), engine.getDefaultHandler(), 
+                    baseUrl, userAgentStyleSheet, parameters, preprocessor, null);
         }
 
         catch (Exception e)
         {
-          throw new be.re.io.IOException(e);
+            throw new CSSToXSLFOException(e);
         }
-      }
-
-      engine.setOutputStream(out);
-      filter.setContentHandler(engine.createContentHandler());
-      filter.parse(source);
     }
 
-    catch (Exception e)
+    public static void
+            main(String[] args) throws Exception
     {
-      throw new CSSToXSLFOException(e);
-    }
-  }
+        URL baseUrl = null;
+        URL catalog = null;
+        URL configuration = null;
+        String pdf = null;
+        Map parameters = new HashMap();
+        URL[] preprocessors = null;
+        URL url = null;
+        URL userAgentStyleSheet = null;
+        boolean validate = false;
 
-
-
-  public static void
-  main(String[] args) throws Exception
-  {
-    URL		baseUrl = null;
-    URL		catalog = null;
-    URL		configuration = null;
-    String	pdf = null;
-    Map		parameters = new HashMap();
-    URL[]	preprocessors = null;
-    URL		url = null;
-    URL		userAgentStyleSheet = null;
-    boolean	validate = false;
-
-    for (int i = 0; i < args.length; ++i)
-    {
-      if (args[i].equals("-h"))
-      {
-        usage(0);
-      }
-
-      if (args[i].equals("-baseurl"))
-      {
-        if (i == args.length - 1)
+        for (int i = 0; i < args.length; ++i)
         {
-          usage(1);
-        }
-
-        baseUrl = Util.createUrl(args[++i]);
-      }
-      else
-      {
-        if (args[i].equals("-uacss"))
-        {
-          if (i == args.length - 1)
-          {
-            usage(1);
-          }
-
-          userAgentStyleSheet = Util.createUrl(args[++i]);
-        }
-        else
-        {
-          if (args[i].equals("-pdf"))
-          {
-            if (i == args.length - 1)
+            if (args[i].equals("-h"))
             {
-              usage(1);
+                usage(0);
             }
 
-            pdf = args[++i];
-          }
-          else
-          {
-            if (args[i].equals("-c"))
+            if (args[i].equals("-baseurl"))
             {
-              if (i == args.length - 1)
-              {
-                usage(1);
-              }
+                if (i == args.length - 1)
+                {
+                    usage(1);
+                }
 
-              catalog = Util.createUrl(args[++i]);
+                baseUrl = Util.createUrl(args[++i]);
             }
             else
             {
-              if (args[i].equals("-p"))
-              {
-                if (i == args.length - 1)
+                if (args[i].equals("-uacss"))
                 {
-                  usage(1);
-                }
+                    if (i == args.length - 1)
+                    {
+                        usage(1);
+                    }
 
-                preprocessors = Util.createUrls(args[++i]);
-              }
-              else
-              {
-                if (args[i].equals("-v"))
-                {
-                  validate = true;
+                    userAgentStyleSheet = Util.createUrl(args[++i]);
                 }
                 else
                 {
-                  if (args[i].equals("-config"))
-                  {
-                    if (i == args.length - 1)
+                    if (args[i].equals("-pdf"))
                     {
-                      usage(1);
-                    }
+                        if (i == args.length - 1)
+                        {
+                            usage(1);
+                        }
 
-                    configuration = Util.createUrl(args[++i]);
-                  }
-                  else
-                  {
-                    if (args[i].indexOf('=') != -1)
-                    {
-                      parameters.put
-                      (
-                        args[i].substring(0, args[i].indexOf('=')),
-                        args[i].indexOf('=') == args[i].length() - 1 ?
-                          "" : args[i].substring(args[i].indexOf('=') + 1)
-                      );
+                        pdf = args[++i];
                     }
                     else
                     {
-                      if (url != null)
-                      {
-                        usage(1);
-                      }
+                        if (args[i].equals("-c"))
+                        {
+                            if (i == args.length - 1)
+                            {
+                                usage(1);
+                            }
 
-                      url = Util.createUrl(args[i]);
+                            catalog = Util.createUrl(args[++i]);
+                        }
+                        else
+                        {
+                            if (args[i].equals("-p"))
+                            {
+                                if (i == args.length - 1)
+                                {
+                                    usage(1);
+                                }
+
+                                preprocessors = Util.createUrls(args[++i]);
+                            }
+                            else
+                            {
+                                if (args[i].equals("-v"))
+                                {
+                                    validate = true;
+                                }
+                                else
+                                {
+                                    if (args[i].equals("-config"))
+                                    {
+                                        if (i == args.length - 1)
+                                        {
+                                            usage(1);
+                                        }
+
+                                        configuration = Util.createUrl(args[++i]);
+                                    }
+                                    else
+                                    {
+                                        if (args[i].indexOf('=') != -1)
+                                        {
+                                            parameters.put(
+                                                    args[i].substring(0, args[i].indexOf('=')),
+                                                    args[i].indexOf('=') == args[i].length() - 1
+                                                            ? "" : args[i].substring(args[i].indexOf('=') + 1)
+                                            );
+                                        }
+                                        else
+                                        {
+                                            if (url != null)
+                                            {
+                                                usage(1);
+                                            }
+
+                                            url = Util.createUrl(args[i]);
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
-                  }
                 }
-              }
             }
-          }
         }
-      }
+
+        if (pdf == null)
+        {
+            usage(1);
+        }
+
+        parameters.put(
+                "base-url",
+                baseUrl != null
+                        ? baseUrl.toString() : (url != null ? url.toString() : "")
+        );
+
+        try
+        {
+            convert(
+                    url != null ? url.openStream() : System.in,
+                    new FileOutputStream(pdf),
+                    baseUrl != null ? baseUrl : url,
+                    userAgentStyleSheet,
+                    catalog != null ? catalog : CSSToXinc.class.getResource("/catalog"),
+                    parameters,
+                    preprocessors,
+                    PDF,
+                    validate,
+                    configuration
+            );
+        }
+
+        catch (Throwable e)
+        {
+            System.err.println(e.getMessage());
+            be.re.util.Util.printStackTrace(e);
+        }
     }
 
-    if (pdf == null)
+    private static void
+            usage(int code)
     {
-      usage(1);
+        System.err.println("Usage: be.re.css.CSSToXinc");
+        System.err.println("  [-h]: show this help");
+        System.err.println("  [-baseurl url]: base URL ");
+        System.err.println("  [-c url_or_filename]: catalog for entity resolution");
+        System.err.println("  [-config url_or_filename]: extra configuration");
+        System.err.println("  [-p url_or_filename_comma_list]: preprocessors");
+        System.err.println("  [-uacss url_or_filename]: User Agent style sheet");
+        System.err.println("  [-v]: turn on validation");
+        System.err.
+                println("  [url_or_filename]: the input document, use stdin by default");
+        System.err.println("  [parameter=value ...] ");
+        System.err.println("  -pdf filename: output file");
+        System.err.println();
+        Util.printUserAgentParameters(System.err);
+        System.exit(code);
     }
-
-    parameters.put
-    (
-      "base-url",
-      baseUrl != null ?
-        baseUrl.toString() : (url != null ? url.toString() : "")
-    );
-
-    try
-    {
-      convert
-      (
-        url != null ? url.openStream() : System.in,
-        new FileOutputStream(pdf),
-        baseUrl != null ? baseUrl : url,
-        userAgentStyleSheet,
-        catalog != null ? catalog : CSSToXinc.class.getResource("/catalog"),
-        parameters,
-        preprocessors,
-        PDF,
-        validate,
-        configuration
-      );
-    }
-
-    catch (Throwable e)
-    {
-      System.err.println(e.getMessage());
-      be.re.util.Util.printStackTrace(e);
-    }
-  }
-
-
-
-  private static void
-  usage(int code)
-  {
-    System.err.println("Usage: be.re.css.CSSToXinc");
-    System.err.println("  [-h]: show this help");
-    System.err.println("  [-baseurl url]: base URL ");
-    System.err.println("  [-c url_or_filename]: catalog for entity resolution");
-    System.err.println("  [-config url_or_filename]: extra configuration");
-    System.err.println("  [-p url_or_filename_comma_list]: preprocessors");
-    System.err.println("  [-uacss url_or_filename]: User Agent style sheet");
-    System.err.println("  [-v]: turn on validation");
-    System.err.
-      println("  [url_or_filename]: the input document, use stdin by default");
-    System.err.println("  [parameter=value ...] ");
-    System.err.println("  -pdf filename: output file");
-    System.err.println();
-    Util.printUserAgentParameters(System.err);
-    System.exit(code);
-  }
 
 } // CSSToXinc

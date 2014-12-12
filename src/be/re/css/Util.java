@@ -269,22 +269,6 @@ class Util
         };
     }
 
-    static XMLFilter createPreprocessorFilter(URL[] preprocessors, XMLFilter parent) throws TransformerConfigurationException
-    {
-        SAXTransformerFactory factory = be.re.xml.sax.Util.newSAXTransformerFactory();
-        XMLFilter result = parent;
-
-        for (int i = 0; i < preprocessors.length; ++i)
-        {
-            XMLFilter transformer = factory.newXMLFilter(new StreamSource(preprocessors[i].toString()));
-
-            transformer.setParent(result);
-            result = transformer;
-        }
-
-        return result;
-    }
-
     static URL createUrl(String s) throws MalformedURLException
     {
         try

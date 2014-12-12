@@ -5,13 +5,10 @@
  */
 package be.re.css;
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import org.w3c.css.sac.CSSException;
-import org.w3c.css.sac.InputSource;
-import org.w3c.css.sac.Parser;
 
 /**
  * Default implementation of {@link CSSResolver} interface. Retrieves and

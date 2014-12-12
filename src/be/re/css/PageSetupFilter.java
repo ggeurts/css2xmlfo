@@ -131,20 +131,18 @@ class PageSetupFilter extends XMLFilterImpl
     private void emitRegion(org.w3c.dom.Element region, String flowName) throws SAXException
     {
         AttributesImpl atts = new AttributesImpl();
-        XMLFilterImpl filter
-                = new FilterOfFilters(
-                        new XMLFilter[]
-                        {
-                            Util.createPostProjectionFilter(
-                                    baseUrl,
-                                    userAgentParameters,
-                                    debug
-                            ).getFilter(),
-                            new GobbleDocumentEvents()
-            // Give a chance for initialization, but don't interfere
-                        // with the chain.
-                        }
-                );
+        XMLFilterImpl filter = new FilterOfFilters(
+                new XMLFilter[]
+                {
+                    Util.createPostProjectionFilter(
+                            baseUrl,
+                            userAgentParameters,
+                            debug
+                    ).getFilter(),
+                    new GobbleDocumentEvents()
+                    // Give a chance for initialization, but don't interfere
+                    // with the chain.
+                });
 
         atts.addAttribute("", "flow-name", "flow-name", "CDATA", flowName);
         filter.setContentHandler(getContentHandler());
@@ -152,8 +150,7 @@ class PageSetupFilter extends XMLFilterImpl
 
         super.startElement(Constants.XSLFO, "static-content", "fo:static-content", atts);
 
-        DOMToContentHandler.
-                elementToContentHandler(removeWidthAndHeight(region), filter);
+        DOMToContentHandler.elementToContentHandler(removeWidthAndHeight(region), filter);
         filter.endDocument();
         super.endElement(Constants.XSLFO, "static-content", "fo:static-content");
     }
