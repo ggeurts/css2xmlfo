@@ -1,6 +1,5 @@
 package be.re.css;
 
-import be.re.xml.sax.ProtectEventHandlerFilter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -14,9 +13,8 @@ import org.apache.fop.apps.FOPException;
 import org.apache.fop.apps.FOUserAgent;
 import org.apache.fop.apps.FopFactory;
 import org.apache.fop.cli.CommandLineOptions;
+import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
-import org.xml.sax.XMLFilter;
-import org.xml.sax.XMLReader;
 
 /**
  * Convenience class for the conversion from CSS to the new FOP XSL-FO
@@ -72,25 +70,10 @@ public class CSSToFOPNew
     {
         try
         {
-            CSSToXSLFOFilterFactory filterFactory = new CSSToXSLFOFilterFactory();
-            filterFactory.setDebug(System.getProperty("be.re.css.debug") != null);
+            CSSToXSLFOConverter converter = new CSSToXSLFOConverter(catalog);
+            converter.setValidate(validate);
+            converter.setDebug(System.getProperty("be.re.css.debug") != null);
             
-            XMLReader parser = be.re.xml.sax.Util.getParser(catalog, validate);
-            XMLFilter parent = new ProtectEventHandlerFilter(true, true, parser);
-
-            if (preprocessors != null)
-            {
-                parent = Util.createPreprocessorFilter(preprocessors, parent);
-            }
-
-            XMLFilter filter = filterFactory.createFilter(baseUrl, userAgentStyleSheet, parameters, parent);
-            InputSource source = new InputSource(in);
-
-            if (baseUrl != null)
-            {
-                source.setSystemId(baseUrl.toString());
-            }
-
             FopFactory fopFactory = FopFactory.newInstance();
             if (configFile != null)
             {
@@ -100,9 +83,9 @@ public class CSSToFOPNew
             {
                 agent = fopFactory.newFOUserAgent();
             }
-            filter.setContentHandler(fopFactory.newFop(format, agent, out).getDefaultHandler());
-
-            filter.parse(source);
+            
+            ContentHandler handler = fopFactory.newFop(format, agent, out).getDefaultHandler();
+            converter.convert(new InputSource(in), handler, baseUrl, userAgentStyleSheet, parameters, preprocessors);
         }
 
         catch (Exception e)
@@ -202,12 +185,9 @@ public class CSSToFOPNew
                 : (url != null ? url.toString() : "")
         );
 
-        FOUserAgent agent = null;
-
         FopCommandLine options = new FopCommandLine();
-
         options.parse(setDummyInputFile(fopOptions != null ? fopOptions : new String[0]));
-        agent = options.getFOUserAgent();
+        FOUserAgent agent = options.getFOUserAgent();
 
         try
         {
@@ -225,7 +205,6 @@ public class CSSToFOPNew
                     agent
             );
         }
-
         catch (Throwable e)
         {
             System.err.println(e.getMessage());
@@ -261,17 +240,15 @@ public class CSSToFOPNew
     }
 
     private static class FopCommandLine extends CommandLineOptions
-
     {
-
-        public FOUserAgent
-                getFOUserAgent()
+        @Override
+        public FOUserAgent getFOUserAgent()
         {
             return super.getFOUserAgent();
         }
 
-        public String
-                getOutputFormat() throws FOPException
+        @Override
+        public String getOutputFormat() throws FOPException
         {
             return super.getOutputFormat();
         }

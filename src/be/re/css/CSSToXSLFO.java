@@ -54,29 +54,16 @@ public class CSSToXSLFO
     {
         try
         {
-            CSSToXSLFOFilterFactory filterFactory = new CSSToXSLFOFilterFactory();
+            CSSToXSLFOConverter converter = new CSSToXSLFOConverter(catalog);
+            converter.setValidate(validate);
+            converter.setDebug(debug);
 
-            XMLReader parser = be.re.xml.sax.Util.getParser(catalog, validate);
-            XMLFilter parent = new ProtectEventHandlerFilter(true, true, parser);
-
-            if (preprocessors != null)
-            {
-                parent = Util.createPreprocessorFilter(preprocessors, parent);
-            }
-
-            XMLFilter filter = filterFactory.createFilter(baseUrl, userAgentStyleSheet, userAgentParameters, parser);
             InputSource source = new InputSource(in);
 
-            if (baseUrl != null)
-            {
-                source.setSystemId(baseUrl.toString());
-            }
-
-            TransformerHandler handler = filterFactory.getTransformerFactory().newTransformerHandler();
-
+            TransformerHandler handler = converter.getTransformerFactory().newTransformerHandler();
             handler.setResult(new StreamResult(out));
-            filter.setContentHandler(handler);
-            filter.parse(source);
+
+            converter.convert(source, handler, baseUrl, userAgentStyleSheet, userAgentParameters, preprocessors);
         }
         catch (SAXException | TransformerConfigurationException | IllegalArgumentException | IOException e)
         {
