@@ -17,39 +17,34 @@ import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-
-
 /**
  * This entity resolver uses a catalog as defined by SGML Open Technical
  * Resolution TR9401:1997. Only PUBLIC and SYSTEM statements are supported at
  * this time. Relative URLs are resolved using the catalog URL as the base URL.
+ *
  * @author Werner Donn\u00e9
  */
-
 public class CatalogResolver implements EntityResolver, XMLResolver
-
 {
 
   // Alphabet.
-
-  final static int		SINGLE_QUOTE = 0;
-  final static int		DOUBLE_QUOTE = 1;
-  final static int		OTHER = 2;
-  final static int		SPACE = 3;
-  final static int		WHITE = 4;
-  final static int		EOF = 5;
+    final static int SINGLE_QUOTE = 0;
+    final static int DOUBLE_QUOTE = 1;
+    final static int OTHER = 2;
+    final static int SPACE = 3;
+    final static int WHITE = 4;
+    final static int EOF = 5;
 
   // States.
+    final static int TYP = 0;
+    final static int SQ1 = 1;
+    final static int DQ1 = 2;
+    final static int ID1 = 3;
+    final static int SQ2 = 4;
+    final static int DQ2 = 5;
+    final static int ERR = 6;
 
-  final static int		TYP = 0;
-  final static int		SQ1 = 1;
-  final static int		DQ1 = 2;
-  final static int		ID1 = 3;
-  final static int		SQ2 = 4;
-  final static int		DQ2 = 5;
-  final static int		ERR = 6;
-
-  final static int[][][]	FSM =
+    final static int[][][] FSM =
     {
       {{SQ1, 1}, {DQ1, 1}, {TYP, 0}, {TYP, 0}, {TYP, 0}, {TYP, 0}}, // TYP
       {{ID1, 1}, {SQ1, 0}, {SQ1, 0}, {SQ1, 0}, {ERR, 0}, {ERR, 0}}, // SQ1
@@ -59,330 +54,249 @@ public class CatalogResolver implements EntityResolver, XMLResolver
       {{DQ2, 0}, {TYP, 1}, {DQ2, 0}, {DQ2, 0}, {ERR, 0}, {ERR, 0}}  // DQ2
     };
 
-  private String catalogSystemId;
-  private final Map<String, String> publicIdentifiers = new HashMap<>();
-  private final Map<String, String> systemIdentifiers = new HashMap<>();
+    private String catalogSystemId;
+    private final Map<String, String> publicIdentifiers = new HashMap<>();
+    private final Map<String, String> systemIdentifiers = new HashMap<>();
 
-
-
-  public
-  CatalogResolver(URL catalogUrl) throws IOException
-  {
-    this(catalogUrl.toString(), null);
-  }
-
-
-
-  public
-  CatalogResolver(String catalogSystemId) throws IOException
-  {
-    this(catalogSystemId, null);
-  }
-
-
-
-  public
-  CatalogResolver(URL catalogUrl, InputStream in) throws IOException
-  {
-    this(catalogUrl.toString(), in);
-  }
-
-
-
-  public
-  CatalogResolver(String catalogSystemId, InputStream in) throws IOException
-  {
-    this.catalogSystemId = catalogSystemId;
-
-    load
-    (
-      in != null ?
-        in :
-        (
-          isUrl(catalogSystemId) ?
-            new URL(catalogSystemId).openStream() :
-            new FileInputStream(catalogSystemId)
-        )
-    );
-  }
-
-
-
-  private static int
-  category(int c)
-  {
-    return
-      c == '\'' ?
-        SINGLE_QUOTE :
-        (
-          c == '\"' ?
-            DOUBLE_QUOTE :
-            (
-              c == ' ' ?
-                SPACE :
-                (
-                  c == '\t' || c == '\n' || c == '\r' ?
-                    WHITE : OTHER
-                )
-            )
-        );
-  }
-
-
-
-  private static void
-  error(int in, int line) throws IOException
-  {
-    if (in == EOF)
+    public CatalogResolver(URL catalogUrl) throws IOException
     {
-      throw
-        new IOException
-        (
-          "Line " + String.valueOf(line) + ": premature end of file"
-        );
+        this(catalogUrl.toString(), null);
     }
 
-    if (in == WHITE)
+    public CatalogResolver(String catalogSystemId) throws IOException
     {
-      throw
-        new IOException
-        (
-          "Line " + String.valueOf(line) +
-            ": \\t, \\n and \\r are not allowed in an identifier"
-        );
+        this(catalogSystemId, null);
     }
 
-    if (in == OTHER)
+    public CatalogResolver(URL catalogUrl, InputStream in) throws IOException
     {
-      throw
-        new IOException
-        (
-          "Line " + String.valueOf(line) + ": white space expected"
-        );
-    }
-  }
-
-
-
-  /**
-   * Returns a map from the public identifiers to the resolved URLs.
-   */
-
-  public Map
-  getPublicIdentifierMappings()
-  {
-    return publicIdentifiers;
-  }
-
-
-
-  /**
-   * Returns a map from the public identifiers to the resolved URLs.
-   */
-
-  public Map
-  getSystemIdentifierMappings()
-  {
-    return systemIdentifiers;
-  }
-
-
-
-  private static String
-  getTypeToken(char[] c, int off, int len, int line) throws IOException
-  {
-    StringTokenizer	tokenizer =
-      new StringTokenizer(new String(c, off, len), " \t\n\r");
-
-    if (!tokenizer.hasMoreTokens())
-    {
-      throw
-        new IOException
-        (
-          "Line " + String.valueOf(line) + ": PUBLIC or SYSTEM expected"
-        );
+        this(catalogUrl.toString(), in);
     }
 
-    String	token = tokenizer.nextToken();
-
-    if (!token.equals("PUBLIC") && !token.equals("SYSTEM"))
+    public CatalogResolver(String catalogSystemId, InputStream in) throws IOException
     {
-      throw
-        new IOException
-        (
-          "Line " + String.valueOf(line) + ": PUBLIC or SYSTEM expected"
-        );
-    }
-
-    return token;
-  }
-
-
-
-  private static boolean
-  isUrl(String s)
-  {
-    try
-    {
-      return s != null && new URL(s) != null;
-    }
-
-    catch (MalformedURLException e)
-    {
-      return false;
-    }
-  }
-
-
-
-  private void
-  load(InputStream in) throws IOException
-  {
-    ByteArrayOutputStream	out = new ByteArrayOutputStream();
-
-    StreamConnector.copy(in, out);
-
-    char[]	c = new String(out.toByteArray(), "ASCII").toCharArray();
-    String	from = null;
-    int		line = 1;
-    int		position = 0;
-    int		state = TYP;
-    String	type = null;
-
-    for (int i = 0; i < c.length; ++i)
-    {
-      int[]	next = FSM[state][category(c[i])];
-
-      if (next[0] == ERR)
-      {
-        error(category(c[i]), line);
-      }
-
-      if (next[1] == 1)
-      {
-        Map<String, String> map;
-
-        switch (state)
+        this.catalogSystemId = catalogSystemId;
+        try
         {
-          case TYP:
-            type = getTypeToken(c, position, i - position, line);
-            break;
+            load(new URL(catalogSystemId).openStream());
+        }
+        catch (MalformedURLException e)
+        {
+            load(new FileInputStream(catalogSystemId));
+        }
+    }
+    
+    private static int category(int c)
+    {
+        return c == '\''
+                ? SINGLE_QUOTE
+                : (c == '\"'
+                        ? DOUBLE_QUOTE
+                        : (c == ' '
+                                ? SPACE
+                                : (c == '\t' || c == '\n' || c == '\r'
+                                        ? WHITE : OTHER)));
+    }
 
-          case SQ1: case DQ1:
-            from = new String(c, position, i - position);
-            break;
-
-          case SQ2: case DQ2:
-            map = type.equals("PUBLIC") ? publicIdentifiers : systemIdentifiers;
-
-            map.put
-            (
-              from,
-              resolveSystemId
-              (
-                catalogSystemId,
-                new String(c, position, i - position)
-              )
+    private static void error(int in, int line) throws IOException
+    {
+        if (in == EOF)
+        {
+            throw new IOException(
+                    "Line " + String.valueOf(line) + ": premature end of file"
             );
-
-            break;
         }
 
-        position = i + 1;
-      }
+        if (in == WHITE)
+        {
+            throw new IOException(
+                    "Line " + String.valueOf(line)
+                    + ": \\t, \\n and \\r are not allowed in an identifier"
+            );
+        }
 
-      state = next[0];
-
-      if (c[i] == '\n')
-      {
-        ++line;
-      }
+        if (in == OTHER)
+        {
+            throw new IOException(
+                    "Line " + String.valueOf(line) + ": white space expected"
+            );
+        }
     }
 
-    if (FSM[state][EOF][0] == ERR)
+    /**
+     * Returns a map from the public identifiers to the resolved URLs.
+     * @return 
+     */
+    public Map getPublicIdentifierMappings()
     {
-      error(EOF, line);
+        return publicIdentifiers;
     }
-  }
 
-
-
-  public InputSource
-  resolveEntity(String publicId, String systemId)
-    throws IOException, SAXException
-  {
-    InputSource	result =
-      publicId != null && publicIdentifiers.get(publicId) != null ?
-        new InputSource(publicIdentifiers.get(publicId)) :
-        (
-          systemId != null && systemIdentifiers.get(systemId) != null ?
-            new InputSource(systemIdentifiers.get(systemId)) : null
-        );
-
-    if (result != null)
+    /**
+     * Returns a map from the public identifiers to the resolved URLs.
+     * @return 
+     */
+    public Map getSystemIdentifierMappings()
     {
-      result.setPublicId(publicId);
+        return systemIdentifiers;
     }
 
-    return result;
-  }
-
-
-
-  public Object
-  resolveEntity
-  (
-    String	publicId,
-    String	systemId,
-    String	baseURI,
-    String	namespace
-  ) throws XMLStreamException
-  {
-    try
+    private static String getTypeToken(char[] c, int off, int len, int line) throws IOException
     {
-      StreamSource	result =
-        new StreamSource
-        (
-          publicId != null && publicIdentifiers.get(publicId) != null ?
-            publicIdentifiers.get(publicId) :
-            (
-              systemId != null && systemIdentifiers.get(systemId) != null ?
-                systemIdentifiers.get(systemId) :
-                (
-                  baseURI != null && systemId != null ?
-                    resolveSystemId(baseURI, systemId) : null
-                )
-            )
-          );
+        StringTokenizer tokenizer
+                = new StringTokenizer(new String(c, off, len), " \t\n\r");
 
-      result.setPublicId(publicId);
+        if (!tokenizer.hasMoreTokens())
+        {
+            throw new IOException(
+                    "Line " + String.valueOf(line) + ": PUBLIC or SYSTEM expected"
+            );
+        }
 
-      return result;
+        String token = tokenizer.nextToken();
+
+        if (!token.equals("PUBLIC") && !token.equals("SYSTEM"))
+        {
+            throw new IOException(
+                    "Line " + String.valueOf(line) + ": PUBLIC or SYSTEM expected"
+            );
+        }
+
+        return token;
     }
 
-    catch (IOException e)
+    private void load(InputStream in) throws IOException
     {
-      throw new XMLStreamException(e);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        StreamConnector.copy(in, out);
+
+        char[] c = new String(out.toByteArray(), "ASCII").toCharArray();
+        String from = null;
+        int line = 1;
+        int position = 0;
+        int state = TYP;
+        String type = null;
+
+        for (int i = 0; i < c.length; ++i)
+        {
+            int[] next = FSM[state][category(c[i])];
+
+            if (next[0] == ERR)
+            {
+                error(category(c[i]), line);
+            }
+
+            if (next[1] == 1)
+            {
+                Map<String, String> map;
+
+                switch (state)
+                {
+                    case TYP:
+                        type = getTypeToken(c, position, i - position, line);
+                        break;
+
+                    case SQ1:
+                    case DQ1:
+                        from = new String(c, position, i - position);
+                        break;
+
+                    case SQ2:
+                    case DQ2:
+                        map = type.equals("PUBLIC") ? publicIdentifiers : systemIdentifiers;
+
+                        map.put(
+                                from,
+                                resolveSystemId(
+                                        catalogSystemId,
+                                        new String(c, position, i - position)
+                                )
+                        );
+
+                        break;
+                }
+
+                position = i + 1;
+            }
+
+            state = next[0];
+
+            if (c[i] == '\n')
+            {
+                ++line;
+            }
+        }
+
+        if (FSM[state][EOF][0] == ERR)
+        {
+            error(EOF, line);
+        }
     }
-  }
 
+    @Override
+    public InputSource resolveEntity(String publicId, String systemId) throws IOException, SAXException
+    {
+        InputSource result
+                = publicId != null && publicIdentifiers.get(publicId) != null
+                        ? new InputSource(publicIdentifiers.get(publicId))
+                        : (systemId != null && systemIdentifiers.get(systemId) != null
+                                ? new InputSource(systemIdentifiers.get(systemId)) : null);
 
+        if (result != null)
+        {
+            result.setPublicId(publicId);
+        }
 
-  private static String
-  resolveSystemId(String baseURI, String systemId) throws IOException
-  {
-    return
-      isUrl(baseURI) ?
-        new URL(new URL(baseURI), systemId).toString() :
-        (
-          systemId.charAt(0) == '/' ?
-            systemId :
-            (
-              baseURI.charAt(baseURI.length() - 1) == '/' ?
-                (baseURI + systemId) :
-                (baseURI.substring(0, baseURI.lastIndexOf('/') + 1) + systemId)
-            )
-        );
-  }
+        return result;
+    }
+
+    public Object
+            resolveEntity(
+                    String publicId,
+                    String systemId,
+                    String baseURI,
+                    String namespace
+            ) throws XMLStreamException
+    {
+        try
+        {
+            StreamSource result
+                    = new StreamSource(
+                            publicId != null && publicIdentifiers.get(publicId) != null
+                                    ? publicIdentifiers.get(publicId)
+                                    : (systemId != null && systemIdentifiers.get(systemId) != null
+                                            ? systemIdentifiers.get(systemId)
+                                            : (baseURI != null && systemId != null
+                                                    ? resolveSystemId(baseURI, systemId) : null))
+                    );
+
+            result.setPublicId(publicId);
+
+            return result;
+        }
+
+        catch (IOException e)
+        {
+            throw new XMLStreamException(e);
+        }
+    }
+
+    private static String resolveSystemId(String baseURI, String systemId) throws IOException
+    {
+        try
+        {
+            URL baseUrl = new URL(baseURI);
+            return new URL(baseUrl, systemId).toString();
+        }
+        catch (MalformedURLException e)
+        {
+            return systemId.charAt(0) == '/'
+                    ? systemId
+                    : baseURI.charAt(baseURI.length() - 1) == '/'
+                            ? (baseURI + systemId)
+                            : (baseURI.substring(0, baseURI.lastIndexOf('/') + 1) + systemId);
+        }
+    }
 
 } // CatalogResolver
