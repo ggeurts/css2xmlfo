@@ -203,9 +203,7 @@ class ProjectorFilter extends XMLFilterImpl
 
     private void addFirstLetterMarker(Element element)
     {
-        List<Rule> pseudoRules = selectPseudoRules(element.matchingPseudoRules, FIRST_LETTER);
-
-        if (!pseudoRules.isEmpty())
+        if (hasPseudoRule(element.matchingPseudoRules, FIRST_LETTER))
         {
             element.appliedAttributes.addAttribute(Constants.CSS, "has-first-letter", "css:has-first-letter", "CDATA", "1");
         }
@@ -215,8 +213,7 @@ class ProjectorFilter extends XMLFilterImpl
     private void applyPseudoRules(Element element, String name) throws SAXException
     {
         List<Rule> pseudoRules = selectPseudoRules(element.matchingPseudoRules, name);
-
-        if (!pseudoRules.isEmpty())
+        if (pseudoRules != null && pseudoRules.size() > 0)
         {
             AttributesImpl extra = new AttributesImpl();
 
@@ -957,18 +954,32 @@ class ProjectorFilter extends XMLFilterImpl
         return getQuotePair(element.quotes, quoteDepth).getStringValue();
     }
 
+    @SuppressWarnings("StringEquality")
+    private static boolean hasPseudoRule(Iterable<Rule> rules, String pseudoElementName)
+    {
+        for (Rule rule : rules)
+        {
+            if (pseudoElementName == rule.getPseudoElementName()) return true;
+        }
+        return false;
+    }
+    
     /**
      * Maintains the order.
      */
     @SuppressWarnings("StringEquality")
     private static List<Rule> selectPseudoRules(Iterable<Rule> rules, String pseudoElementName)
     {
-        List<Rule> result = new ArrayList<>();
+        List<Rule> result = null;
 
         for (Rule rule : rules)
         {
             if (pseudoElementName == rule.getPseudoElementName())
             {
+                if (result == null)
+                {
+                    result = new ArrayList<>();
+                }
                 result.add(rule);
             }
         }
