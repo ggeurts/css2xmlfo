@@ -1144,7 +1144,10 @@ class ProjectorFilter extends XMLFilterImpl
 
         for (int i = s.indexOf('\n'); i != -1; i = s.indexOf(position, '\n'))
         {
-            super.characters(s.substring(position, i).toCharArray(), 0, i - position);
+            if (i > position)
+            {
+                super.characters(s.substring(position, i).toCharArray(), 0, i - position);
+            }
             super.startElement(Constants.CSS, "newline", "css:newline", new AttributesImpl());
             super.endElement(Constants.CSS, "newline", "css:newline");
             position = i + 1;
@@ -1241,7 +1244,8 @@ class ProjectorFilter extends XMLFilterImpl
                     if (rule.getPseudoElementName() == null)
                     {
                         stringSet = property;
-                    }   break;
+                    }   
+                    break;
                 default:
                     Util.setCSSAttribute(result, property, rule.getSpecificity());
                     if (propertyName.equals("display") && "none".equalsIgnoreCase(property.getValue()))

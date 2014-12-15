@@ -75,7 +75,7 @@ public class CSSToXSLFOConverterTest
     {
         String xhtml = "<html xmlns='http://www.w3.org/1999/xhtml'>\n" +
             "<head>\n" +
-            "<title>Test document</title>\n" +
+            "<title>Test</title>\n" +
             "</head>\n" +
             "<body><h1>Hello world</h1></body>\n" +
             "</html>";
@@ -84,7 +84,6 @@ public class CSSToXSLFOConverterTest
         Accumulator out = TestUtil.createAccumulator();
         cssConverter.convert(source, out, baseUrl, null, null, null, null);
 
-        String xslfo = TestUtil.toXmlString(out);
         XMLAssert.assertXpathExists("/fo:root", out.getDocument());
     }
 
@@ -96,7 +95,7 @@ public class CSSToXSLFOConverterTest
     {
         String xhtml = "<html xmlns='http://www.w3.org/1999/xhtml'>\n" +
             "<head>\n" +
-            "<title>Test document</title>\n" +
+            "<title>Test</title>\n" +
             "</head>\n" +
             "<body>Hello world</body>\n" +
             "</html>";
@@ -106,5 +105,56 @@ public class CSSToXSLFOConverterTest
         cssConverter.convert(source, out, baseUrl, null, null, null, null);
 
         XMLAssert.assertXpathExists("/fo:root", out.getDocument());
+    }
+
+    @Test
+    public void convertXhtmlBreakElement() throws Exception
+    {
+        String xhtml = "<html xmlns='http://www.w3.org/1999/xhtml'>\n" +
+            "<head>\n" +
+            "<title>Test</title>\n" +
+            "</head>\n" +
+            "<body>Line 1<br/>Line 2</body>\n" +
+            "</html>";
+        InputSource source = new InputSource(new StringReader(xhtml));
+
+        Accumulator out = TestUtil.createAccumulator();
+        cssConverter.convert(source, out, baseUrl, null, null, null, null);
+
+        /*
+        The <br /> element has CSS rule "br:before { before: &#10; }" defined 
+        in default xhtml.css. This is projected to the following XML by the 
+        ProjectorFilter:
+        
+            <css:before display="inline">
+                <css:newline />
+            <css:before />
+        
+        The css.xsl XSLT transformation subsequently transforms this to:
+        
+            <fo:inline> <!-- Container for br:before styles -->
+                <fo:inline> <!-- Container for newline -->
+                    <fo:block />
+                </fo:inline>
+            </fo:inline>
+         */
+        XMLAssert.assertXpathExists("//fo:flow[@flow-name='xsl-region-body']/fo:block/fo:inline/fo:inline/fo:block[string(text())='']", out.getDocument());
+    }
+
+    @Test
+    public void convertXhtmlLineBreakEntity() throws Exception
+    {
+        String xhtml = "<html xmlns='http://www.w3.org/1999/xhtml'>\n" +
+            "<head>\n" +
+            "<title>Test</title>\n" +
+            "</head>\n" +
+            "<body>Line 1&#10;Line 2</body>\n" +
+            "</html>";
+        InputSource source = new InputSource(new StringReader(xhtml));
+
+        Accumulator out = TestUtil.createAccumulator();
+        cssConverter.convert(source, out, baseUrl, null, null, null, null);
+
+        XMLAssert.assertXpathEvaluatesTo("Line 1\nLine 2", "string(//fo:flow[@flow-name='xsl-region-body']/fo:block)", out.getDocument());
     }
 }
