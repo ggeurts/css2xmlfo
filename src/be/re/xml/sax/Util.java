@@ -74,7 +74,7 @@ public class Util
             
             trySetParserFeature(factory, "http://apache.org/xml/features/validation/schema", validating);
             trySetParserFeature(factory, "http://apache.org/xml/features/validation/schema-full-checking", validating);
-            trySetParserFeature(factory, "http://apache.org/xml/features/non-validating/load-external-dtd", validating);
+            trySetParserFeature(factory, "http://apache.org/xml/features/nonvalidating/load-external-dtd", validating);
 
             return factory;
         }

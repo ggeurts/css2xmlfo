@@ -80,15 +80,6 @@ public class CSSToXSLFOConverter
     }
 
     /**
-     * The transformer factory.
-     * @return 
-     */
-    public SAXTransformerFactory getTransformerFactory()
-    {
-        return transformerFactory;
-    }
-
-    /**
      * Indicates whether debug information is written
      * @return 
      */
@@ -133,7 +124,7 @@ public class CSSToXSLFOConverter
      * @param userAgentParameters Optional parameters.
      * @param preprocessor Optional {@link XMLFilter} that preprocesses XML input 
      * before the transformation to XSL-FO output.
-     * @param postprocessor Optional {@link XMLFilter} that postprocesses XSL-FO output.
+     * @param postprocessor Optional {@link XMLFilter} that post-processes XSL-FO output.
      * @throws SAXException
      * @throws TransformerConfigurationException
      * @throws IOException 
@@ -173,7 +164,7 @@ public class CSSToXSLFOConverter
      * @param userAgentParameters Optional parameters.
      * @param preprocessor Optional {@link XMLFilter} that preprocesses XML input 
      * before the transformation to XSL-FO output.
-     * @param postprocessor Optional {@link XMLFilter} that postprocesses XSL-FO output.
+     * @param postprocessor Optional {@link XMLFilter} that post-processes XSL-FO output.
      * @return
      * @throws SAXException
      * @throws TransformerConfigurationException
@@ -197,6 +188,8 @@ public class CSSToXSLFOConverter
         }
 
         XMLFilter filter = createFilter(baseUrl, userAgentStyleSheet, userAgentParameters, preprocessor, postprocessor);
+        XMLReader parser = be.re.xml.sax.Util.getParser(catalogResolver, validate);
+        filter.setParent(parser);
         return new SAXSource(filter, source);
     }
 
@@ -296,7 +289,7 @@ public class CSSToXSLFOConverter
         XMLFilter parent = new ProtectEventHandlerFilter(true, true, parser);
         if (preprocessor != null)
         {
-            postprocessor.setParent(parent);
+            preprocessor.setParent(parent);
         }
         XMLFilter filter = createFilterCore(baseUrl, userAgentStyleSheet, userAgentParameters);
         if (postprocessor != null)

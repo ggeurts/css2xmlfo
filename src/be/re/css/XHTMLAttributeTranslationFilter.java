@@ -19,7 +19,6 @@ import org.xml.sax.helpers.XMLFilterImpl;
  */
 
 class XHTMLAttributeTranslationFilter extends XMLFilterImpl
-
 {
 
   private static final String	COL = "col".intern();
@@ -107,8 +106,8 @@ class XHTMLAttributeTranslationFilter extends XMLFilterImpl
         {"object", "border", null, "border-left-style", "solid"},
         {"object", "border", null, "border-right-style", "solid"},
         {"object", "border", null, "border-top-style", "solid"},
-        { "object", "border", null, "border-after-width.conditionality", "retain" },
-        { "object", "border", null, "border-before-width.conditionality", "retain" },
+        {"object", "border", null, "border-after-width.conditionality", "retain"},
+        {"object", "border", null, "border-before-width.conditionality", "retain"},
         {"li", "compact", null, "list-style-position", "inside"},
         {"li", "type", null, "list-style-type", null},
         {"object", "height", null, "height", null},
@@ -177,650 +176,414 @@ class XHTMLAttributeTranslationFilter extends XMLFilterImpl
         {"ul", "type", null, "list-style-type", null}
       });
 
-  private String defaultBorderThickness;
-  private final Stack<Element> elementStack = new Stack<>();
-  private final Stack<Element> tableStack = new Stack<>();
+    private String defaultBorderThickness;
+    private final Stack<Element> elementStack = new Stack<>();
+    private final Stack<Element> tableStack = new Stack<>();
 
-
-
-  XHTMLAttributeTranslationFilter()
-  {
-    this("0.2pt");
-  }
-
-
-
-  XHTMLAttributeTranslationFilter(String defaultBorderThickness)
-  {
-    this.defaultBorderThickness = defaultBorderThickness;
-  }
-
-
-
-  XHTMLAttributeTranslationFilter(XMLReader parent)
-  {
-    this(parent, "0.2pt");
-  }
-
-
-
-  XHTMLAttributeTranslationFilter
-  (
-    XMLReader	parent,
-    String	defaultBorderThickness
-  )
-  {
-    super(parent);
-    this.defaultBorderThickness = defaultBorderThickness;
-  }
-
-
-
-  private static String
-  callPropertyResolver
-  (
-    String	function,
-    String	element,
-    Attributes	atts,
-    String	attribute,
-    String	value
-  )
-  {
-    try
+    XHTMLAttributeTranslationFilter()
     {
-      return
-        (String)
-          XHTMLAttributeTranslationFilter.class.getDeclaredMethod
-          (
-            function,
-            new Class[]
-              {String.class, Attributes.class, String.class, String.class}
-          ).invoke(null, new Object[] {element, atts, attribute, value});
+        this("0.2pt");
     }
 
-    catch (Exception e)
+    XHTMLAttributeTranslationFilter(String defaultBorderThickness)
     {
-      return value;
-    }
-  }
-
-
-
-  public void
-  endElement(String namespaceURI, String localName, String qName)
-    throws SAXException
-  {
-    if (Constants.XHTML == namespaceURI)
-    {
-      elementStack.pop();
-
-      if (TABLE == localName)
-      {
-        tableStack.pop();
-      }
+        this.defaultBorderThickness = defaultBorderThickness;
     }
 
-    super.endElement(namespaceURI, localName, qName);
-  }
-
-
-
-  private static boolean
-  equivalentSibling(String element1, String element2)
-  {
-    return
-      element1 == element2 ||
-        (
-          (THEAD == element1 || TBODY == element1 || TFOOT == element1) &&
-            (THEAD == element2 || TBODY == element2 || TFOOT == element2)
-        );
-  }
-
-
-
-  private static String
-  fontSize(String element, Attributes atts, String attribute, String value)
-  {
-    try
+    XHTMLAttributeTranslationFilter(XMLReader parent)
     {
-      return
-        value.startsWith("+") ?
-          (
-            String.valueOf
-            (
-              (int)
-                (
-                  100.0 *
-                    (100 + 10 * Integer.parseInt(value.substring(1))) / 100
-                )
-            ) + "%"
-          ) :
-          (
-            value.startsWith("-") ?
-              (
-                String.valueOf
-                (
-                  (int)
-                    (
-                      100.0 *
-                        (100 - 10 * Integer.parseInt(value.substring(1))) / 100
-                    )
-                ) + "%"
-              ) : (String.valueOf((Integer.parseInt(value) + 7)) + "pt")
-          );
+        this(parent, "0.2pt");
     }
 
-    catch (Exception e)
+    XHTMLAttributeTranslationFilter(XMLReader parent, String defaultBorderThickness)
     {
-      return "100%";
-    }
-  }
-
-
-
-  private static Map<String, List<Tuple>>
-  loadTable(String[][] table)
-  {
-    Map<String, List<Tuple>>	result = new HashMap<>();
-
-    for (int i = 0; i < table.length; ++i)
-    {
-      String key = table[i][0] + "#" + table[i][1];
-      List<Tuple> tuples = result.get(key);
-
-      if (tuples == null)
-      {
-        tuples = new ArrayList<>();
-        result.put(key, tuples);
-      }
-
-      tuples.add(new Tuple(table[i][2], table[i][3], table[i][4]));
+        super(parent);
+        this.defaultBorderThickness = defaultBorderThickness;
     }
 
-    return result;
-  }
-
-
-
-  private static Tuple[]
-  lookup(String element, Attributes atts, String attribute, String value)
-  {
-    List<Tuple> tuples = map.get(element + "#" + attribute);
-
-    if (tuples == null)
+    private static String callPropertyResolver(String function, String element, Attributes atts, String attribute, String value)
     {
-      return new Tuple[0];
-    }
-
-    List<Tuple> result = new ArrayList<>();
-
-    for (int i = 0; i < tuples.size(); ++i)
-    {
-      Tuple tuple = (Tuple) tuples.get(i);
-      if (tuple.inValue == null || tuple.inValue.equals(value))
-      {
-        String	otherAttribute;
-
-        result.add
-        (
-          new Tuple
-          (
-            tuple.inValue,
-            tuple.property,
-            tuple.outValue == null ?
-              value :
-              (
-                tuple.outValue.charAt(0) == '@' ?
-                  (
-                    (
-                      otherAttribute =
-                        atts.getValue
-                        (
-                          tuple.outValue.
-                            substring(1, tuple.outValue.indexOf(';'))
-                        )
-                    ) != null ?
-                      otherAttribute :
-                      tuple.outValue.substring(tuple.outValue.indexOf(';') + 1)
-                  ) :
-                  (
-                    tuple.outValue.startsWith("f:") ?
-                      callPropertyResolver
-                      (
-                        tuple.outValue.substring(2),
-                        element,
-                        atts,
-                        attribute,
-                        value
-                      ) : tuple.outValue
-                  )
-              )
-          )
-        );
-      }
-    }
-
-    return result.toArray(new Tuple[result.size()]);
-  }
-
-
-
-  private static void
-  mergeAttribute
-  (
-    AttributesImpl	atts,
-    String		originalName,
-    String		cssName,
-    String		value
-  )
-  {
-    int	index1 = atts.getIndex(Constants.CSS, cssName);
-
-    if (index1 == -1)
-    {
-      atts.
-        addAttribute(Constants.CSS, cssName, "css:" + cssName, "CDATA", value);
-    }
-    else
-    {
-      int	index2 = atts.getIndex(Constants.SPECIF, cssName);
-
-      if (index2 != -1)
-      {
-        atts.setValue(index1, value);
-      }
-    }
-
-    if (originalName != null)
-    {
-      index1 = atts.getIndex(originalName);
-
-      if (index1 != -1)
-      {
-        atts.removeAttribute(index1);
-      }
-    }
-  }
-
-
-
-  private AttributesImpl
-  prepareTableAttributes(String localName, Attributes atts)
-  {
-    return
-      TD == localName || TH == localName ?
-         preprocessTableCell
-         (
-           localName,
-           atts,
-           new String[] {"all", "cols"},
-           "left"
-         ) :
-         (
-           TR == localName ?
-             preprocessRulesBorder
-             (
-               localName,
-               atts,
-               new String[] {"all", "rows"},
-               "top"
-             ) :
-             (
-               COL == localName ?
-                 preprocessRulesBorder
-                 (
-                   localName,
-                   atts,
-                   new String[] {"all", "cols"},
-                   "left"
-                 ) :
-                 (
-                   TABLE == localName ?
-                     preprocessTableBorder(atts) :
-                     (
-                       THEAD == localName || TFOOT == localName ||
-                         TBODY == localName ?
-                         preprocessRulesBorder
-                         (
-                           localName,
-                           atts,
-                           new String[] {"all", "rows", "groups"},
-                           "top"
-                         ) : 
-                         (
-                           COLGROUP == localName ?
-                             preprocessRulesBorder
-                             (
-                               localName,
-                               atts,
-                               new String[] {"groups"},
-                               "left"
-                             ) : new AttributesImpl(atts)
-                         )
-                     )
-                )
-            )
-        );
-  }
-
-
-
-  private AttributesImpl
-  preprocessRulesBorder
-  (
-    String	localName,
-    Attributes	atts,
-    String[]	rulesValues,
-    String	borderSide
-  )
-  {
-    Element		table = tableStack.peek();
-    String		border = table.atts.getValue("border");
-    String		rules = table.atts.getValue("rules");
-    AttributesImpl	result = new AttributesImpl(atts);
-
-    if ("0".equals(border) || "none".equals(rules))
-    {
-      return result;
-    }
-
-    String	borderWidth =
-      border == null ? defaultBorderThickness : (border + "px");
-    Element	parent = elementStack.peek();
-
-    if
-    (
-      (
-        (
-          border != null						&&
-          rules == null
-        )								||
-        Util.inArray(rulesValues, rules)
-      )									&&
-      equivalentSibling(localName, ((Preceding) parent.extra).element)	&&
-      ((Preceding) parent.extra).count > 0
-    )
-    {
-      mergeAttribute
-      (
-        result,
-        "border",
-        "border-" + borderSide + "-width",
-        borderWidth
-      );
-
-      mergeAttribute
-      (
-        result,
-        null, // Removed already.
-        "border-" + borderSide + "-style",
-        "solid"
-      );
-
-      if ("bottom".equals(borderSide))
-      {
-        mergeAttribute
-        (
-          result,
-          null, // Removed already.
-          "border-after-width.conditionality",
-          "retain"
-        );
-      }
-
-      if ("top".equals(borderSide))
-      {
-        mergeAttribute
-        (
-          result,
-          null, // Removed already.
-          "border-before-width.conditionality",
-          "retain"
-        );
-      }
-    }
-
-    return result;
-  }
-
-
-
-  private AttributesImpl
-  preprocessTableBorder(Attributes atts)
-  {
-    Element		table = tableStack.peek();
-    String		border = table.atts.getValue("border");
-    String		frame = table.atts.getValue("frame");
-    AttributesImpl	result = new AttributesImpl(atts);
-
-    if ("0".equals(border) || "void".equals(frame))
-    {
-      return result;
-    }
-
-    String	borderWidth =
-      border == null ? defaultBorderThickness : (border + "px");
-
-    if
-    (
-      (
-        border != null							&&
-        frame == null
-      )									||
-      Util.inArray(new String[] {"above", "hsides", "box", "border"}, frame)
-    )
-    {
-      mergeAttribute(result, "border", "border-top-width", borderWidth);
-      mergeAttribute(result, null, "border-top-style", "solid");
-
-      mergeAttribute
-      (
-        result,
-        null, // Removed already
-        "border-before-width.conditionality",
-        "retain"
-      );
-    }
-
-    if
-    (
-      (
-        border != null							&&
-        frame == null
-      )									||
-      Util.inArray(new String[] {"below", "hsides", "box", "border"}, frame)
-    )
-    {
-      mergeAttribute(result, "border", "border-bottom-width", borderWidth);
-      mergeAttribute(result, null, "border-bottom-style", "solid");
-
-      mergeAttribute
-      (
-        result,
-        null, // Removed already
-        "border-after-width.conditionality",
-        "retain"
-      );
-    }
-
-    if
-    (
-      (
-        border != null							&&
-        frame == null
-      )									||
-      Util.inArray(new String[] {"lhs", "vsides", "box", "border"}, frame)
-    )
-    {
-      mergeAttribute(result, "border", "border-left-width", borderWidth);
-      mergeAttribute(result, null, "border-left-style", "solid");
-    }
-
-    if
-    (
-      (
-        border != null							&&
-        frame == null
-      )									||
-      Util.inArray(new String[] {"rhs", "vsides", "box", "border"}, frame)
-    )
-    {
-      mergeAttribute(result, "border", "border-right-width", borderWidth);
-      mergeAttribute(result, null, "border-right-style", "solid");
-    }
-
-    return result;
-  }
-
-
-
-  private AttributesImpl
-  preprocessTableCell
-  (
-    String	localName,
-    Attributes	atts,
-    String[]	rulesValues,
-    String	borderSide
-  )
-  {
-    // If there are columns the normal column propagation can take place. Else
-    // we should place the borders directly on the cells.
-
-    return
-      preprocessRulesBorder
-      (
-        localName,
-        preprocessTableCellPaddingAndSpacing(atts),
-        rulesValues,
-        borderSide
-      );
-  }
-
-
-
-  private AttributesImpl
-  preprocessTableCellPaddingAndSpacing(Attributes atts)
-  {
-    Element		table = tableStack.peek();
-    String		padding = table.atts.getValue("cellpadding");
-    AttributesImpl	result = new AttributesImpl(atts);
-    String		spacing = table.atts.getValue("cellspacing");
-
-    if (padding != null)
-    {
-      mergeAttribute(result, null, "padding-top", padding);
-      mergeAttribute(result, null, "padding-bottom", padding);
-      mergeAttribute(result, null, "padding-left", padding);
-      mergeAttribute(result, null, "padding-right", padding);
-    }
-
-    if (spacing != null)
-    {
-      mergeAttribute(result, null, "margin-top", spacing);
-      mergeAttribute(result, null, "margin-bottom", spacing);
-      mergeAttribute(result, null, "margin-left", spacing);
-      mergeAttribute(result, null, "margin-right", spacing);
-    }
-
-    return result;
-  }
-
-
-
-  public void
-  startElement
-  (
-    String	namespaceURI,
-    String	localName,
-    String	qName,
-    Attributes	atts
-  ) throws SAXException
-  {
-    if (Constants.XHTML == namespaceURI)
-    {
-      Element	element = new Element(namespaceURI, localName, qName, atts);
-
-      if (TABLE == localName)
-      {
-        element.extra = new Boolean(false); // No columns seen yet.
-        tableStack.push(element);
-      }
-
-      AttributesImpl	newAtts = prepareTableAttributes(localName, atts);
-
-      for (int i = 0; i < atts.getLength(); ++i)
-      {
-        if (atts.getURI(i).equals(""))
+        try
         {
-          Tuple[]	tuples =
-            lookup(localName, atts, atts.getLocalName(i), atts.getValue(i));
-
-          for (int j = 0; j < tuples.length; ++j)
-          {
-            mergeAttribute
-            (
-              newAtts,
-              atts.getLocalName(i),
-              tuples[j].property,
-              tuples[j].outValue
-            );
-          }
+            return (String) XHTMLAttributeTranslationFilter.class
+                    .getDeclaredMethod(function, new Class[] { String.class, Attributes.class, String.class, String.class })
+                    .invoke(null, new Object[] { element, atts, attribute, value });
         }
-      }
-
-      Element	parent = elementStack.empty() ? null : elementStack.peek();
-
-      if (parent != null)
-      {
-        ((Preceding) parent.extra).count =
-          equivalentSibling(localName, ((Preceding) parent.extra).element) ?
-            (((Preceding) parent.extra).count + 1) :
-            1;
-        ((Preceding) parent.extra).element = localName;
-      }
-
-      element.extra = new Preceding();
-      elementStack.push(element);
-
-      super.startElement(namespaceURI, localName, qName, newAtts);
+        catch (Exception e)
+        {
+            return value;
+        }
     }
-    else
+
+    public void endElement(String namespaceURI, String localName, String qName) throws SAXException
     {
-      super.startElement(namespaceURI, localName, qName, atts);
+        if (Constants.XHTML == namespaceURI)
+        {
+            elementStack.pop();
+
+            if (TABLE == localName)
+            {
+                tableStack.pop();
+            }
+        }
+
+        super.endElement(namespaceURI, localName, qName);
     }
-  }
 
-
-
-  private static class Preceding
-
-  {
-
-    private int		count = 0;
-    private String	element;
-
-  } // Preceding
-
-
-
-  private static class Tuple
-
-  {
-
-    private String	inValue;
-    private String	outValue;
-    private String	property;
-
-
-
-    private
-    Tuple(String inValue, String property, String outValue)
+    private static boolean equivalentSibling(String element1, String element2)
     {
-      this.inValue = inValue;
-      this.property = property;
-      this.outValue = outValue;
+        return element1 == element2
+                || ((THEAD == element1 || TBODY == element1 || TFOOT == element1)
+                && (THEAD == element2 || TBODY == element2 || TFOOT == element2));
     }
 
-  } // Tuple
+    private static String fontSize(String element, Attributes atts, String attribute, String value)
+    {
+        try
+        {
+            return value.startsWith("+")
+                    ? (String.valueOf((int) (100.0 * (100 + 10 * Integer.parseInt(value.substring(1))) / 100)) + "%")
+                    : (value.startsWith("-")
+                            ? (String.valueOf((int) (100.0 * (100 - 10 * Integer.parseInt(value.substring(1))) / 100)) + "%") 
+                            : (String.valueOf((Integer.parseInt(value) + 7)) + "pt"));
+        }
+        catch (Exception e)
+        {
+            return "100%";
+        }
+    }
+
+    private static Map<String, List<Tuple>> loadTable(String[][] table)
+    {
+        Map<String, List<Tuple>> result = new HashMap<>();
+
+        for (int i = 0; i < table.length; ++i)
+        {
+            String key = table[i][0] + "#" + table[i][1];
+            List<Tuple> tuples = result.get(key);
+
+            if (tuples == null)
+            {
+                tuples = new ArrayList<>();
+                result.put(key, tuples);
+            }
+
+            tuples.add(new Tuple(table[i][2], table[i][3], table[i][4]));
+        }
+
+        return result;
+    }
+
+    private static Tuple[] lookup(String element, Attributes atts, String attribute, String value)
+    {
+        List<Tuple> tuples = map.get(element + "#" + attribute);
+        if (tuples == null)
+        {
+            return new Tuple[0];
+        }
+
+        List<Tuple> result = new ArrayList<>();
+
+        for (int i = 0; i < tuples.size(); ++i)
+        {
+            Tuple tuple = (Tuple) tuples.get(i);
+            if (tuple.inValue == null || tuple.inValue.equals(value))
+            {
+                String otherAttribute;
+
+                result.add(
+                        new Tuple(
+                                tuple.inValue,
+                                tuple.property,
+                                tuple.outValue == null
+                                        ? value
+                                        : (tuple.outValue.charAt(0) == '@'
+                                                ? (otherAttribute = atts.getValue(tuple.outValue.substring(1, tuple.outValue.indexOf(';')))) != null
+                                                        ? otherAttribute
+                                                        : tuple.outValue.substring(tuple.outValue.indexOf(';') + 1)
+                                                : tuple.outValue.startsWith("f:")
+                                                        ? callPropertyResolver(tuple.outValue.substring(2), element, atts, attribute, value) 
+                                                        : tuple.outValue)
+                        )
+                );
+            }
+        }
+
+        return result.toArray(new Tuple[result.size()]);
+    }
+
+    private static void mergeAttribute(AttributesImpl atts, String originalName, String cssName, String value)
+    {
+        int index1 = atts.getIndex(Constants.CSS, cssName);
+
+        if (index1 == -1)
+        {
+            atts.addAttribute(Constants.CSS, cssName, "css:" + cssName, "CDATA", value);
+        }
+        else
+        {
+            int index2 = atts.getIndex(Constants.SPECIF, cssName);
+
+            if (index2 != -1)
+            {
+                atts.setValue(index1, value);
+            }
+        }
+
+        if (originalName != null)
+        {
+            index1 = atts.getIndex(originalName);
+
+            if (index1 != -1)
+            {
+                atts.removeAttribute(index1);
+            }
+        }
+    }
+
+    private AttributesImpl prepareTableAttributes(String localName, Attributes atts)
+    {
+        return TD == localName || TH == localName
+                ? preprocessTableCell(
+                        localName,
+                        atts,
+                        new String[]
+                        {
+                            "all", "cols"
+                        },
+                        "left"
+                )
+                : (TR == localName
+                        ? preprocessRulesBorder(
+                                localName,
+                                atts,
+                                new String[]
+                                {
+                                    "all", "rows"
+                                },
+                                "top"
+                        )
+                        : (COL == localName
+                                ? preprocessRulesBorder(
+                                        localName,
+                                        atts,
+                                        new String[]
+                                        {
+                                            "all", "cols"
+                                        },
+                                        "left"
+                                )
+                                : (TABLE == localName
+                                        ? preprocessTableBorder(atts)
+                                        : (THEAD == localName || TFOOT == localName
+                                        || TBODY == localName
+                                                ? preprocessRulesBorder(
+                                                        localName,
+                                                        atts,
+                                                        new String[]
+                                                        {
+                                                            "all", "rows", "groups"
+                                                        },
+                                                        "top"
+                                                )
+                                                : (COLGROUP == localName
+                                                        ? preprocessRulesBorder(
+                                                                localName,
+                                                                atts,
+                                                                new String[]
+                                                                {
+                                                                    "groups"
+                                                                },
+                                                                "left"
+                                                        ) : new AttributesImpl(atts))))));
+    }
+
+    private AttributesImpl preprocessRulesBorder(String localName, Attributes atts, String[] rulesValues, String borderSide)
+    {
+        Element table = tableStack.peek();
+        String border = table.atts.getValue("border");
+        String rules = table.atts.getValue("rules");
+        AttributesImpl result = new AttributesImpl(atts);
+
+        if ("0".equals(border) || "none".equals(rules))
+        {
+            return result;
+        }
+
+        String borderWidth = border == null ? defaultBorderThickness : (border + "px");
+        Element parent = elementStack.peek();
+
+        if (((border != null && rules == null) || Util.inArray(rulesValues, rules))
+                && equivalentSibling(localName, ((Preceding) parent.extra).element)
+                && ((Preceding) parent.extra).count > 0)
+        {
+            mergeAttribute(result, "border", "border-" + borderSide + "-width", borderWidth);
+            mergeAttribute(result, null /* Removed already. */, "border-" + borderSide + "-style", "solid");
+
+            if ("bottom".equals(borderSide))
+            {
+                mergeAttribute(result, null /* Removed already. */, "border-after-width.conditionality", "retain");
+            }
+            if ("top".equals(borderSide))
+            {
+                mergeAttribute(result, null /* Removed already. */, "border-before-width.conditionality", "retain");
+            }
+        }
+
+        return result;
+    }
+
+    private AttributesImpl preprocessTableBorder(Attributes atts)
+    {
+        Element table = tableStack.peek();
+        String border = table.atts.getValue("border");
+        String frame = table.atts.getValue("frame");
+        AttributesImpl result = new AttributesImpl(atts);
+
+        if ("0".equals(border) || "void".equals(frame))
+        {
+            return result;
+        }
+
+        String borderWidth = border == null ? defaultBorderThickness : (border + "px");
+
+        if ((border != null && frame == null)
+                || Util.inArray(new String[] { "above", "hsides", "box", "border" }, frame))
+        {
+            mergeAttribute(result, "border", "border-top-width", borderWidth);
+            mergeAttribute(result, null, "border-top-style", "solid");
+            mergeAttribute(result, null /* Removed already */, "border-before-width.conditionality", "retain");
+        }
+
+        if ((border != null && frame == null)
+                || Util.inArray(new String[] { "below", "hsides", "box", "border" }, frame))
+        {
+            mergeAttribute(result, "border", "border-bottom-width", borderWidth);
+            mergeAttribute(result, null, "border-bottom-style", "solid");
+            mergeAttribute(result, null /* Removed already */, "border-after-width.conditionality", "retain");
+        }
+
+        if ((border != null && frame == null)
+                || Util.inArray(new String[] { "lhs", "vsides", "box", "border" }, frame))
+        {
+            mergeAttribute(result, "border", "border-left-width", borderWidth);
+            mergeAttribute(result, null, "border-left-style", "solid");
+        }
+
+        if ((border != null && frame == null) 
+                || Util.inArray(new String[] { "rhs", "vsides", "box", "border" }, frame))
+        {
+            mergeAttribute(result, "border", "border-right-width", borderWidth);
+            mergeAttribute(result, null, "border-right-style", "solid");
+        }
+
+        return result;
+    }
+
+    private AttributesImpl preprocessTableCell(String localName, Attributes atts, String[] rulesValues, String borderSide)
+    {
+        // If there are columns the normal column propagation can take place. Else
+        // we should place the borders directly on the cells.
+        return preprocessRulesBorder(
+                localName,
+                preprocessTableCellPaddingAndSpacing(atts),
+                rulesValues,
+                borderSide
+        );
+    }
+
+    private AttributesImpl preprocessTableCellPaddingAndSpacing(Attributes atts)
+    {
+        Element table = tableStack.peek();
+        String padding = table.atts.getValue("cellpadding");
+        AttributesImpl result = new AttributesImpl(atts);
+        String spacing = table.atts.getValue("cellspacing");
+
+        if (padding != null)
+        {
+            mergeAttribute(result, null, "padding-top", padding);
+            mergeAttribute(result, null, "padding-bottom", padding);
+            mergeAttribute(result, null, "padding-left", padding);
+            mergeAttribute(result, null, "padding-right", padding);
+        }
+
+        if (spacing != null)
+        {
+            mergeAttribute(result, null, "margin-top", spacing);
+            mergeAttribute(result, null, "margin-bottom", spacing);
+            mergeAttribute(result, null, "margin-left", spacing);
+            mergeAttribute(result, null, "margin-right", spacing);
+        }
+
+        return result;
+    }
+
+  @Override
+    public void startElement(String namespaceURI, String localName, String qName, Attributes atts) throws SAXException
+    {
+        if (Constants.XHTML == namespaceURI)
+        {
+            Element element = new Element(namespaceURI, localName, qName, atts);
+
+            if (TABLE == localName)
+            {
+                element.extra = new Boolean(false); // No columns seen yet.
+                tableStack.push(element);
+            }
+
+            AttributesImpl newAtts = prepareTableAttributes(localName, atts);
+
+            for (int i = 0; i < atts.getLength(); ++i)
+            {
+                if (atts.getURI(i).equals(""))
+                {
+                    Tuple[] tuples = lookup(localName, atts, atts.getLocalName(i), atts.getValue(i));
+                    for (int j = 0; j < tuples.length; ++j)
+                    {
+                        mergeAttribute(newAtts, atts.getLocalName(i), tuples[j].property, tuples[j].outValue);
+                    }
+                }
+            }
+
+            Element parent = elementStack.empty() ? null : elementStack.peek();
+            if (parent != null)
+            {
+                ((Preceding) parent.extra).count
+                        = equivalentSibling(localName, ((Preceding) parent.extra).element)
+                                ? (((Preceding) parent.extra).count + 1)
+                                : 1;
+                ((Preceding) parent.extra).element = localName;
+            }
+
+            element.extra = new Preceding();
+            elementStack.push(element);
+
+            super.startElement(namespaceURI, localName, qName, newAtts);
+        }
+        else
+        {
+            super.startElement(namespaceURI, localName, qName, atts);
+        }
+    }
+
+    private static class Preceding
+    {
+        private int count = 0;
+        private String element;
+    } // Preceding
+
+    private static class Tuple
+    {
+        private String inValue;
+        private String outValue;
+        private String property;
+
+        private Tuple(String inValue, String property, String outValue)
+        {
+            this.inValue = inValue;
+            this.property = property;
+            this.outValue = outValue;
+        }
+    } // Tuple
 
 } // XHTMLAttributeTranslationFilter

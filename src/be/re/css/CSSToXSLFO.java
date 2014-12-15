@@ -1,6 +1,5 @@
 package be.re.css;
 
-import be.re.xml.sax.ProtectEventHandlerFilter;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,12 +8,14 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.sax.SAXSource;
+import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLFilter;
-import org.xml.sax.XMLReader;
 
 /**
  * Convenience class for the conversion from CSS to XSL-FO.
@@ -50,7 +51,7 @@ public class CSSToXSLFO
             Map<String, String> userAgentParameters,
             URL[] preprocessors,
             boolean validate,
-            boolean debug) throws IOException, CSSToXSLFOException
+            boolean debug) throws CSSToXSLFOException
     {
         try
         {
@@ -58,15 +59,13 @@ public class CSSToXSLFO
             converter.setValidate(validate);
             converter.setDebug(debug);
 
-            InputSource source = new InputSource(in);
-
-            TransformerHandler handler = converter.getTransformerFactory().newTransformerHandler();
-            handler.setResult(new StreamResult(out));
-
             XMLFilter preprocessor = converter.createPreprocessorFilter(preprocessors);
-            converter.convert(source, handler, baseUrl, userAgentStyleSheet, userAgentParameters, preprocessor, null);
+            SAXSource source = converter.createSAXSource(new InputSource(in), 
+                    baseUrl, userAgentStyleSheet, userAgentParameters, preprocessor, null);
+            TransformerFactory factory = be.re.xml.sax.Util.newSAXTransformerFactory();
+            factory.newTransformer().transform(source, new StreamResult(out));
         }
-        catch (SAXException | TransformerConfigurationException | IllegalArgumentException | IOException e)
+        catch (Exception e)
         {
             throw new CSSToXSLFOException(e);
         }

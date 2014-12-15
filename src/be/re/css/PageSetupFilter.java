@@ -697,7 +697,7 @@ class PageSetupFilter extends XMLFilterImpl
 
     private boolean shouldEmitContents()
     {
-        return ((Element) elements.peek()).inBodyRegion;
+        return !elements.isEmpty() && elements.peek().inBodyRegion;
     }
 
     private static void sortExtents(List<org.w3c.dom.Element> extents)
@@ -855,20 +855,17 @@ class PageSetupFilter extends XMLFilterImpl
     private class Recorder extends XMLFilterImpl
     {
         private final List<Event> events = new ArrayList<>();
-        private final Stack<Element> elements = new Stack<>();
 
         @Override
         public void endElement(String namespaceURI, String localName, String qName) throws SAXException
         {
-            elements.pop();
             events.add(new Event(namespaceURI, localName, qName, null));
         }
 
         private void replayEvents() throws SAXException
         {
-            for (int i = 0; i < events.size(); ++i)
+            for (Event event: events)
             {
-                Event event = events.get(i);
                 if (event.atts != null)
                 {
                     PageSetupFilter.this.startElement(event.namespaceURI, event.localName, event.qName, event.atts);
@@ -883,19 +880,16 @@ class PageSetupFilter extends XMLFilterImpl
         @Override
         public void startElement(String namespaceURI, String localName, String qName, Attributes atts) throws SAXException
         {
-            events.add(new Event(namespaceURI, localName, qName, atts));
-
-            if (!elements.isEmpty() && elements.peek().inBodyRegion)
+            boolean inBodyRegion = "body".equals(atts.getValue(Constants.CSS, "region"));
+            if (inBodyRegion)
             {
                 replayEvents();
+                PageSetupFilter.this.startElement(namespaceURI, localName, qName, atts);
                 PageSetupFilter.this.getParent().setContentHandler(PageSetupFilter.this);
+                return;
             }
-            else
-            {
-                Element element = new Element(namespaceURI, localName, qName, atts);
-                element.inBodyRegion = "body".equals(atts.getValue(Constants.CSS, "region"));
-                elements.push(element);
-            }
+            
+            events.add(new Event(namespaceURI, localName, qName, atts));
         }
 
         private class Event
